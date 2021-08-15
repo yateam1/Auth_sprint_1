@@ -1,0 +1,12 @@
+flask
+gevent
+sqlalchemy
+flask-marshmallow
+flasgger
+flask-security
+flask-jwt-extended
+sqlalchemy
+psycopg2-binary
+flask_sqlalchemy
+redis
+decouple
