@@ -7,23 +7,7 @@
 ![diagram](https://316129.selcdn.ru/public/diagram.png)
 
 ## Модели данных
-Пользователь:
-- e-mail(login)
-- password
-- имя пользователя
-- is_superuser
-- role (связь с таблицей ролей)
-- access токен
-- refresh токен
-
-Роль:
-- название. Например контент-менеджер, подписчик, гость.
-
-История аутентификаций:
-- user_id (связь с таблицей пользователей),
-- [useragent](https://ru.wikipedia.org/wiki/User_agent#:~:text=User%20agent%20—%20идентификационная%20строка,со%20встроенным%20доступа%20к%20веб-ресурсам),
-- дата регистрации,
-- дата последней аутентификации
+![diagram](https://disk.d-sky.ru/index.php/s/uXephWg6tsCKnHD)
 
 
 ## OpenApi документация
