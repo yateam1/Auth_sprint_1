@@ -7,7 +7,7 @@
 ![diagram](https://316129.selcdn.ru/public/diagram.png)
 
 ## Модели данных
-![image](https://user-images.githubusercontent.com/58282452/129549569-56ccbc52-bcb5-48f1-b699-baebc7b75f6b.png)
+![diagram](https://316129.selcdn.ru/public/models.png)
 
 ## OpenApi документация
 ### регистрация пользователя:  
