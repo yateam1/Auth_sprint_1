@@ -4,7 +4,6 @@ from flask_restx import Namespace, Resource
 
 from app.settings import config
 
-
 ping_namespace = Namespace("ping")
 
 

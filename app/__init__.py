@@ -3,9 +3,8 @@ from flask_admin import Admin
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from app.settings import config
 from app.api import api
-
+from app.settings import config
 
 db = SQLAlchemy()
 migrate = Migrate()

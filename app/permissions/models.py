@@ -7,4 +7,6 @@ class Role(TimestampWithUUIDMixin, db.Model):
     __tablename__ = 'roles'
 
     name = db.Column(db.String(128), nullable=False, unique=True)
-    users = db.relationship("User", secondary=users_roles_association, back_populates="chats")
+    users = db.relationship("User",
+                            secondary=users_roles_association,
+                            back_populates="chats")

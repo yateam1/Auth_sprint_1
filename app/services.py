@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
 
-from app import db, create_app
+from app import create_app, db
 
 
 class AbstractService(ABC):
@@ -29,4 +29,3 @@ class AbstractService(ABC):
         db.session.delete(instance)
         db.session.commit()
         return instance
-
