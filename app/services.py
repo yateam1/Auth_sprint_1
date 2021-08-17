@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod
 from uuid import UUID
+from typing import Optional, Iterable
+
+from sqlalchemy import inspect
 
 from app import create_app, db
 
@@ -18,14 +21,32 @@ class AbstractService(ABC):
         return self.model.query.filter_by(id=pk).first()
 
     def create(self, **kwargs):
-        # TODO
-        pass
+        data = self._filter_kwargs(data=kwargs, exclude=['id', 'created_at', 'updated_at'])
+        instance = self.model(**data)
+        db.session.add(instance)
+        db.session.commit()
+        return instance
 
     def update(self, instance, **kwargs):
-        # TODO
-        pass
+        data = self._filter_kwargs(data=kwargs, exclude=['id', 'created_at', 'updated_at'])
+        for k, v in data.items():
+            setattr(instance, k, v)
+        db.session.commit()
+        return instance
 
     def delete(self, instance):
         db.session.delete(instance)
         db.session.commit()
         return instance
+
+    def _fields_name(self) -> set:
+        """Возвращает список полей модели."""
+        mapper = inspect(self.model)
+        return {column.key for column in mapper.attrs}
+
+    def _filter_kwargs(self, data: dict, exclude: Optional[Iterable] = None,):
+        """Оставляет только те ключи, которые есть в полях модели."""
+        fields = self._fields_name()
+        if exclude:
+            fields -= set(exclude)
+        return {k: v for k, v in data.items() if k in fields}
