@@ -11,4 +11,3 @@ cat config/.env.template > config/.env
 docker-compose up
 ```
 4. Перейти в браузере по адресу `0.0.0.0:8000`.
-
