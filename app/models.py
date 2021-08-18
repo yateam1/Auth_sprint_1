@@ -38,8 +38,28 @@ class Profile(TimestampWithUUIDMixin, db.Model):
     user = db.relationship("User", back_populates="profile")
 
 
+class Session(TimestampWithUUIDMixin, db.Model):
+    __tablename__ = 'sessions'
+
+    fingerprint = db.Column(db.String(255), nullable=False)
+    access_token = db.Column(db.String(255), nullable=False)
+    refresh_token = db.Column(db.String(255), nullable=False)
+    is_removed = db.Column(db.Boolean(), default=False, nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
+    user = db.relationship("User", uselist=False, back_populates='sessions')
+
+
+class Role(TimestampWithUUIDMixin, db.Model):
+    __tablename__ = 'roles'
+
+    name = db.Column(db.String(128), nullable=False, unique=True)
+    users = db.relationship("User",
+                            secondary=users_roles_association,
+                            back_populates="chats")
+
+
 if config("FLASK_ENV") == "development":
     from app import admin
-    from app.users.admin import UsersAdminView
+    from app.admin.users import UsersAdminView
 
     admin.add_view(UsersAdminView(User, db.session))
