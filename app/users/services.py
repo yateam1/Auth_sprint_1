@@ -1,5 +1,5 @@
-from app.users.models import User
 from app.services import AbstractService
+from app.users.models import User
 
 
 class UserService(AbstractService):

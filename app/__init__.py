@@ -4,9 +4,8 @@ from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
-from app.settings import config
 from app.api import api
-
+from app.settings import config
 
 db = SQLAlchemy()
 migrate = Migrate()

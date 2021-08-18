@@ -1,3 +1,5 @@
+from sqlalchemy.dialects.postgresql import UUID
+
 from app import db
 from app.mixins import TimestampWithUUIDMixin
 
@@ -9,9 +11,5 @@ class Session(TimestampWithUUIDMixin, db.Model):
     access_token = db.Column(db.String(255), nullable=False)
     refresh_token = db.Column(db.String(255), nullable=False)
     is_removed = db.Column(db.Boolean(), default=False, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship("User", uselist=False, back_populates='sessions')
-
-
-
-
