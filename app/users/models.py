@@ -1,3 +1,5 @@
+from sqlalchemy.dialects.postgresql import UUID
+
 from app import db
 from app.mixins import TimestampWithUUIDMixin
 from app.settings import config
@@ -5,8 +7,8 @@ from app.settings import config
 
 users_roles_association = db.Table(
     "users_roles",
-    db.Column("user_id", db.Integer, db.ForeignKey("users.id")),
-    db.Column("role_id", db.Integer, db.ForeignKey("roles.id")),
+    db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("users.id")),
+    db.Column("role_id", UUID(as_uuid=True), db.ForeignKey("roles.id")),
 )
 
 
@@ -26,7 +28,7 @@ class Profile(TimestampWithUUIDMixin, db.Model):
     __tablename__ = 'profiles'
 
     email = db.Column(db.String(128), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
     user = db.relationship("User", back_populates="profile")
 
 
