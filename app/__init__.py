@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_admin import Admin
+from flask_bcrypt import Bcrypt
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
@@ -8,6 +9,7 @@ from app.settings import config
 
 db = SQLAlchemy()
 migrate = Migrate()
+bcrypt = Bcrypt()
 admin = Admin(template_mode="bootstrap3")
 
 
@@ -23,6 +25,7 @@ def create_app(test_config=None):
 
     db.init_app(app)
     migrate.init_app(app, db)
+    bcrypt.init_app(app)
     if config('FLASK_ENV') == "development":
         admin.init_app(app)
 

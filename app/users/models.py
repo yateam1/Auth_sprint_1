@@ -1,6 +1,7 @@
+
+from app import bcrypt, db
 from sqlalchemy.dialects.postgresql import UUID
 
-from app import db
 from app.mixins import TimestampWithUUIDMixin
 from app.settings import config
 
@@ -23,6 +24,10 @@ class User(TimestampWithUUIDMixin, db.Model):
                             secondary=users_roles_association,
                             back_populates="users")
     sessions = db.relationship("Session", back_populates="user")
+
+    def __init__(self, password: str, **kwargs):
+        super().__init__(**kwargs)
+        self.password = bcrypt.generate_password_hash(password).decode()
 
 
 class Profile(TimestampWithUUIDMixin, db.Model):
