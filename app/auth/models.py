@@ -13,7 +13,3 @@ class Session(TimestampWithUUIDMixin, db.Model):
     is_removed = db.Column(db.Boolean(), default=False, nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship("User", uselist=False, back_populates='sessions')
-
-
-
-

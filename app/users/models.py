@@ -4,7 +4,6 @@ from app import db
 from app.mixins import TimestampWithUUIDMixin
 from app.settings import config
 
-
 users_roles_association = db.Table(
     "users_roles",
     db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("users.id")),
@@ -20,7 +19,9 @@ class User(TimestampWithUUIDMixin, db.Model):
     active = db.Column(db.Boolean(), default=True, nullable=False)
     is_super = db.Column(db.Boolean(), default=False, nullable=False)
     profile = db.relationship("Profile", uselist=False, back_populates="user")
-    roles = db.relationship("Role", secondary=users_roles_association, back_populates="users")
+    roles = db.relationship("Role",
+                            secondary=users_roles_association,
+                            back_populates="users")
     sessions = db.relationship("Session", back_populates="user")
 
 
@@ -37,5 +38,3 @@ if config("FLASK_ENV") == "development":
     from app.users.admin import UsersAdminView
 
     admin.add_view(UsersAdminView(User, db.session))
-
-
