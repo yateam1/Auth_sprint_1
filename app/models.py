@@ -63,7 +63,6 @@ class Session(BaseModel, db.Model):
 
     fingerprint = db.Column(db.String(255), nullable=False)
     user_agent = db.Column(db.String(255), nullable=False)
-    access_token = db.Column(db.String(255), nullable=False)
     refresh_token = db.Column(db.String(255), nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship('User', uselist=False, back_populates='sessions')

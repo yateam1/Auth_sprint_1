@@ -27,7 +27,7 @@ class RoleList(Resource):
         return role_service.get_all(), 200
 
     @permissions_namespace.expect(role, validate=True)
-    @permissions_namespace.response(201, 'Добавлена новая роль <user_username>.')
+    @permissions_namespace.response(201, 'Добавлена новая роль <role_name>.')
     @permissions_namespace.response(400, 'Роль уже существует.')
     def post(self):
         """Добавление новой роли."""
