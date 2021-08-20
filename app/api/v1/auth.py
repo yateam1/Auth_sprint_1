@@ -1,5 +1,4 @@
 from uuid import uuid4
-import jwt
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
@@ -93,6 +92,37 @@ class Auth(Resource):
         return response, 200
 
 
+class RefreshTokens(Resource):
+    # @auth_namespace.marshal_with(user)
+    # @auth_namespace.expect(user_with_password, validate=True)
+    @auth_namespace.response(201, 'Успех')
+    @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
+    def post(self):
+        """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
+        post_data = request.get_json()
+        refresh_token = post_data.get('refresh_token')
+        fingerprint = post_data.get('fingerprint')
+        session = SessionService.get(refresh_token=refresh_token, fingerprint=fingerprint)
+
+        if not session:
+            auth_namespace.abort(400, 'Refresh-токен истек, либо не существует')
+
+        SessionService.delete(session)
+        access_token = user.encode_token()
+        refresh_token = str(uuid4())
+        session = {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': user,
+            'fingerprint': post_data.get('fingerprint'),
+            'user_agent': post_data.get('user_agent'),
+        }
+        session_service.create(**session)
+
+        response = {'access_token': access_token, 'refresh_token': refresh_token}
+        return response, 200
+
+
 auth_namespace.add_resource(Register, '/register')
 auth_namespace.add_resource(Auth, '/login')
-
+auth_namespace.add_resource(RefreshTokens, '/refresh-tokens')
