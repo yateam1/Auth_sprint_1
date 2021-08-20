@@ -13,6 +13,7 @@ services:
           - "ghcr.io/s-klimov/auth_sprint_1:dev"
           - "ghcr.io/s-klimov/auth_sprint_1:latest"
           - "*"
+      restart: always
       depends_on:
         - db
         - redis
