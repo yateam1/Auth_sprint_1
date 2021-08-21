@@ -55,7 +55,8 @@ class Register(Resource):
     def post(self):
         """Регистрация нового пользователя."""
         post_data = request.get_json()
-        user_data = user_service.model.filter_kwargs(data=post_data, exclude=['id', 'created_at', 'updated_at'])
+        # user_data = user_service.model.filter_kwargs(data=post_data, exclude=['id', 'created_at', 'updated_at'])
+        user_data = post_data
 
         user = user_service.get_user_by_username(user_data.get('username'))
         if user:
