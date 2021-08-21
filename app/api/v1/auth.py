@@ -20,7 +20,10 @@ user = auth_namespace.model(
 )
 
 user_with_password = auth_namespace.clone(
-    'User with password', user, {'password': fields.String(required=True)}
+    'User with password', user, {
+        'password': fields.String(required=True),
+        'email': fields.String(required=True),
+    }
 )
 
 login = auth_namespace.model(
