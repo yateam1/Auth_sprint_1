@@ -1,9 +1,8 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
-from app.services import RoleService
 from app.models import User
-
+from app.services import RoleService
 
 role_service = RoleService()
 permissions_namespace = Namespace('permissions')

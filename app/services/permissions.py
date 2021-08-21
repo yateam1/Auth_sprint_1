@@ -1,5 +1,5 @@
-from app.services.base import AbstractService
 from app.models import Role
+from app.services.base import AbstractService
 
 
 class RoleService(AbstractService):

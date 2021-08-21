@@ -1,11 +1,11 @@
 from uuid import uuid4
+
 import jwt
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from app.bcrypt import bcrypt
-from app.services import UserService, SessionService
-
+from app.services import SessionService, UserService
 
 auth_namespace = Namespace('auth')
 

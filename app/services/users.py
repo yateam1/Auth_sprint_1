@@ -1,5 +1,5 @@
+from app.models import Profile, User
 from app.services.base import AbstractService
-from app.models import User, Profile
 
 
 class ProfileService(AbstractService):

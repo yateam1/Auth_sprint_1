@@ -1,9 +1,9 @@
 from datetime import datetime
-from typing import Optional, Iterable
+from typing import Iterable, Optional
 from uuid import uuid4
 
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import inspect
+from sqlalchemy.dialects.postgresql import UUID
 
 from app.db import db
 
