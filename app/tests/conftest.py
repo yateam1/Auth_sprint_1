@@ -1,6 +1,7 @@
 import pytest
 
 from app import create_app, db
+from app.factories import HeaderFactory
 
 
 @pytest.fixture(scope="module")
@@ -18,3 +19,7 @@ def test_db():
     db.session.remove()
     db.drop_all()
 
+
+@pytest.fixture
+def auth_headers():
+    return HeaderFactory().headers
