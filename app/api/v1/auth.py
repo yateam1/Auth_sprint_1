@@ -30,8 +30,8 @@ login = auth_namespace.model(
     {
         'username': fields.String(required=True),
         'password': fields.String(required=True),
-        'fingerprint': fields.String(required=True),
-        'user_agent': fields.String(required=True),
+        # 'fingerprint': fields.String(required=True),
+        # 'user_agent': fields.String(required=True),
     },
 )
 
@@ -45,6 +45,8 @@ tokens = auth_namespace.clone(
 
 parser = auth_namespace.parser()
 parser.add_argument('Authorization', location='headers')
+parser.add_argument('User-Agent', location='headers')
+parser.add_argument('fingerprint', location='headers')
 
 
 class Register(Resource):
@@ -81,14 +83,16 @@ class Auth(Resource):
             auth_namespace.abort(404, 'Пользователя не существует.')
         if not bcrypt.check_password_hash(user.password, password):
             auth_namespace.abort(404, 'Неверный пароль.')
-        access_token = user.encode_token()
+        access_token, expired = user.encode_token()
         refresh_token = str(uuid4())
+        args = parser.parse_args()
         session = {
             'access_token': access_token,
             'refresh_token': refresh_token,
             'user': user,
-            'fingerprint': post_data.get('fingerprint'),
-            'user_agent': post_data.get('user_agent'),
+            'expired': expired,
+            'fingerprint': args.get('fingerprint'),
+            'user_agent': args.get('User-Agent'),
         }
         session_service.create(**session)
 
@@ -112,7 +116,7 @@ class RefreshTokens(Resource):
             auth_namespace.abort(400, 'Refresh-токен истек, либо не существует')
 
         SessionService.delete(session)
-        access_token = user.encode_token()
+        access_token, expired = user.encode_token()
         refresh_token = str(uuid4())
         session = {
             'access_token': access_token,

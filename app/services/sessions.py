@@ -9,5 +9,6 @@ class SessionService(AbstractService):
 
     def get(self, refresh_token: str, fingerprint: str):
         """Возвращает пользователя с юзернеймом username."""
-        now = datetime.now()
+        now = datetime.utcnow()
         return self.model.query.filter_by(refresh_token=refresh_token).filter_by(fingerprint=fingerprint).filter_by(expired<=now).first()
+

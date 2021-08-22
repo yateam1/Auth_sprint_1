@@ -47,7 +47,7 @@ class User(BaseModel, db.Model):
         }
         return jwt.encode(
             payload, config('SECRET_KEY'), algorithm='HS256'
-        )
+        ), payload['exp']
 
 
 class Profile(BaseModel, db.Model):
