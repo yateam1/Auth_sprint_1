@@ -7,8 +7,13 @@ from app.models import Session
 class SessionService(AbstractService):
     model = Session
 
-    def get(self, refresh_token: str, fingerprint: str):
+    def get(self, user, fingerprint: str, user_agent: str):
         """Возвращает пользователя с юзернеймом username."""
         now = datetime.utcnow()
-        return self.model.query.filter_by(refresh_token=refresh_token).filter_by(fingerprint=fingerprint).filter_by(expired<=now).first()
+        return self.model.query.filter(
+            self.model.user == user,
+            self.model.user_agent == user_agent,
+            self.model.fingerprint == fingerprint,
+            self.model.expired >= now
+        ).first()
 

@@ -6,8 +6,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.bcrypt import bcrypt
 from app.db import db
 from app.mixins import BaseModel
-from app.settings import config
-
+from app.settings import config, ACCESS_TOKEN_EXPIRATION
 
 users_roles_association = db.Table(
     "users_roles",
@@ -37,9 +36,9 @@ class User(BaseModel, db.Model):
     def decode_token(token):
         return jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
 
-    def encode_token(self):
+    def encode_token(self, time_expiration=ACCESS_TOKEN_EXPIRATION):
         payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
+            'exp': datetime.utcnow() + timedelta(seconds=time_expiration),
             'iat': datetime.utcnow(),
             'user_id': str(self.id),
             'roles': self.roles,
