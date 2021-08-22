@@ -35,12 +35,12 @@ login = auth_namespace.model(
     },
 )
 
-refresh = auth_namespace.model(
+refresh_token = auth_namespace.model(
     'Refresh token', {'refresh_token': fields.String(required=True)}
 )
 
 tokens = auth_namespace.clone(
-    'Access and refresh tokens', refresh, {'access_token': fields.String(required=True)}
+    'Access and refresh tokens', refresh_token, {'access_token': fields.String(required=True)}
 )
 
 parser = auth_namespace.parser()
@@ -90,7 +90,7 @@ class Auth(Resource):
         if not bcrypt.check_password_hash(user.password, password):
             auth_namespace.abort(404, 'Неверный пароль.')
 
-        session = session_service.get(user=user, fingerprint=fingerprint, user_agent=user_agent)
+        session = session_service.get_by_user(user=user, fingerprint=fingerprint, user_agent=user_agent)
         if session:
             auth_namespace.abort(401, f'Пользователь уже залогинен на устройстве {user_agent}.')
 
@@ -111,37 +111,43 @@ class Auth(Resource):
         return response, 200
 
 
-# class RefreshTokens(Resource):
-#     # @auth_namespace.marshal_with(user)
-#     # @auth_namespace.expect(user_with_password, validate=True)
-#     @auth_namespace.response(201, 'Успех')
-#     @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
-#     def post(self):
-#         """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
-#         post_data = request.get_json()
-#         refresh_token = post_data.get('refresh_token')
-#         fingerprint = post_data.get('fingerprint')
-#         session = SessionService.get(refresh_token=refresh_token, fingerprint=fingerprint)
-#
-#         if not session:
-#             auth_namespace.abort(400, 'Refresh-токен истек, либо не существует')
-#
-#         SessionService.delete(session)
-#         access_token, expired = user.encode_token()
-#         refresh_token, _ = user.encode_token(REFRESH_TOKEN_EXPIRATION)
-#         session = {
-#             'access_token': access_token,
-#             'refresh_token': refresh_token,
-#             'user': user,
-#             'fingerprint': post_data.get('fingerprint'),
-#             'user_agent': post_data.get('user_agent'),
-#         }
-#         session_service.create(**session)
-#
-#         response = {'access_token': access_token, 'refresh_token': refresh_token}
-#         return response, 200
+class RefreshTokens(Resource):
+    @auth_namespace.marshal_with(tokens)
+    @auth_namespace.expect(refresh_token, validate=True)
+    @auth_namespace.response(201, 'Успех')
+    @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
+    def post(self):
+        """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
+        post_data = request.get_json()
+        refresh_token = post_data.get('refresh_token')
+
+        args = parser.parse_args()
+        fingerprint = args.get('fingerprint')
+        user_agent = args.get('User-Agent')
+
+        session = session_service.get_by_refresh_token(refresh_token=refresh_token,
+                                                       fingerprint=fingerprint,
+                                                       user_agent=user_agent)
+        if not session:
+            auth_namespace.abort(400, 'Refresh-токен истек, либо не существует. Нужно залогиниться')
+
+        session_service.delete(session)
+        access_token, expired = session.user.encode_token()
+        refresh_token, _ = session.user.encode_token(REFRESH_TOKEN_EXPIRATION)
+        session = {
+            'access_token': access_token,
+            'refresh_token': refresh_token,
+            'user': session.user,
+            'expired': expired,
+            'fingerprint': fingerprint,
+            'user_agent': user_agent,
+        }
+        session_service.create(**session)
+
+        response = {'access_token': access_token, 'refresh_token': refresh_token}
+        return response, 201
 
 
 auth_namespace.add_resource(Register, '/register')
 auth_namespace.add_resource(Auth, '/login')
-# auth_namespace.add_resource(RefreshTokens, '/refresh-tokens')
+auth_namespace.add_resource(RefreshTokens, '/refresh-tokens')

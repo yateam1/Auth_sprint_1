@@ -68,6 +68,10 @@ class Session(BaseModel, db.Model):
     user = db.relationship('User', uselist=False, back_populates='sessions')
     expired = db.Column(db.DateTime, nullable=False)
 
+    @staticmethod
+    def decode_token(token):
+        return jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
+
 
 class Role(BaseModel, db.Model):
     __tablename__ = 'roles'
