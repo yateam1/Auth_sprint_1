@@ -5,6 +5,10 @@ from app.services.base import AbstractService
 class ProfileService(AbstractService):
     model = Profile
 
+    def get_by_email(self, email: str):
+        """Возвращает профиль пользователя с почтой email."""
+        return self.model.query.filter_by(email=email).first()
+
 
 class UserService(AbstractService):
     model = User

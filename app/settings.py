@@ -22,6 +22,9 @@ class DevelopmentConfig(BasicConfig):
 
 class TestingConfig(BasicConfig):
     TESTING = True
+    SQLALCHEMY_DATABASE_URI = (f'postgresql://{config("POSTGRES_USER")}:'
+                               f'{config("POSTGRES_PASSWORD")}'
+                               f'@db/test-db')
 
 
 class ProductionConfig(BasicConfig):

@@ -12,8 +12,8 @@ user = users_namespace.model(
     {
         'id': fields.String(readOnly=True),
         'username': fields.String(required=True),
-        'created_at': fields.DateTime(readOnly=True),
-        'updated_at': fields.DateTime(readOnly=True),
+        'created': fields.DateTime(readOnly=True),
+        'updated': fields.DateTime(readOnly=True),
         'active': fields.Boolean(),
         'is_super': fields.Boolean(readOnly=True),
     },
@@ -39,17 +39,15 @@ class UserList(Resource):
     def post(self):
         """Добавляет нового пользователя."""
         post_data = request.get_json()
-        user_data = service.model.filter_kwargs(data=post_data, exclude=['id', 'created_at', 'updated_at'])
-
         response_object = {}
 
-        user = service.get_user_by_username(user_data.get('username'))
+        user = service.get_user_by_username(post_data.get('username'))
         if user:
             response_object['message'] = 'Такой пользователь уже зарегистрирован.'
             return response_object, 400
 
-        service.create(**user_data)
-        response_object['message'] = f'Пользователь {user_data["username"]} добавлен.'
+        service.create(**post_data)
+        response_object['message'] = f'Пользователь {post_data["username"]} добавлен.'
         return response_object, 201
 
 

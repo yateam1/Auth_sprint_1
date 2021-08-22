@@ -1,7 +1,6 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
-from app.models import User
 from app.services import RoleService
 
 role_service = RoleService()
@@ -12,9 +11,8 @@ role = permissions_namespace.model(
     {
         'id': fields.String(readOnly=True),
         'name': fields.String(required=True),
-        # 'users': fields.List(User, default=list),
-        'created_at': fields.DateTime(readOnly=True),
-        'updated_at': fields.DateTime(readOnly=True),
+        'created': fields.DateTime(readOnly=True),
+        'updated': fields.DateTime(readOnly=True),
     },
 )
 
@@ -31,17 +29,15 @@ class RoleList(Resource):
     def post(self):
         """Добавление новой роли."""
         post_data = request.get_json()
-        role_data = role_service.model.filter_kwargs(data=post_data, exclude=['id', 'created_at', 'updated_at'])
-
         response = {}
 
-        role = role_service.get_role_by_name(role_data.get('name'))
+        role = role_service.get_role_by_name(post_data.get('name'))
         if role:
-            response['message'] = f'Роль с именем {role_data["name"]} уже существует.'
+            response['message'] = f'Роль с именем {post_data["name"]} уже существует.'
             return response, 400
 
-        role_service.create(**role_data)
-        response['message'] = f'Роль {role_data["name"]} добавлена.'
+        role_service.create(**post_data)
+        response['message'] = f'Роль {post_data["name"]} добавлена.'
         return response, 201
 
 

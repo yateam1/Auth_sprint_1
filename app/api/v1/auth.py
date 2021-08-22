@@ -56,12 +56,11 @@ class Register(Resource):
     def post(self):
         """Регистрация нового пользователя."""
         post_data = request.get_json()
-        user_data = user_service.model.filter_kwargs(data=post_data, exclude=['id', 'created_at', 'updated_at'])
 
-        user = user_service.get_user_by_username(user_data.get('username'))
+        user = user_service.get_user_by_username(post_data.get('username'))
         if user:
-            auth_namespace.abort(400, f'Пользователь {user_data["username"]} уже зарегистрирован.')
-        user = user_service.create(**user_data)
+            auth_namespace.abort(400, f'Пользователь {post_data["username"]} уже зарегистрирован.')
+        user = user_service.create(**post_data)
 
         return user, 201
 
