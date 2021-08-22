@@ -1,10 +1,8 @@
-from datetime import datetime, timedelta
 from uuid import uuid4
 
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
-from app.settings import config
 from app.bcrypt import bcrypt
 from app.services import SessionService, UserService
 
@@ -35,12 +33,12 @@ login = auth_namespace.model(
     },
 )
 
-refresh = auth_namespace.model(
+refresh_token = auth_namespace.model(
     'Refresh token', {'refresh_token': fields.String(required=True)}
 )
 
 tokens = auth_namespace.clone(
-    'Access and refresh tokens', refresh, {'access_token': fields.String(required=True)}
+    'Access and refresh tokens', refresh_token, {'access_token': fields.String(required=True)}
 )
 
 parser = auth_namespace.parser()
@@ -98,7 +96,6 @@ class Auth(Resource):
             'user': user,
             'fingerprint': fingerprint,
             'user_agent': user_agent,
-            'expired': datetime.utcnow() + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int))
         }
         session_service.create(**session)
 
@@ -106,6 +103,44 @@ class Auth(Resource):
         return response, 200
 
 
+class Refresh(Resource):
+    @auth_namespace.marshal_with(tokens)
+    @auth_namespace.expect(refresh_token, validate=True)
+    @auth_namespace.response(201, 'Успех')
+    @auth_namespace.response(400, 'Не переданы обязательные заголовки.')
+    @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
+    def post(self):
+        """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
+        args = parser.parse_args()
+        fingerprint = args.get('Fingerprint')
+        user_agent = args.get('User-Agent')
+        if not all((fingerprint, user_agent)):
+            auth_namespace.abort(400, 'Не переданы обязательные заголовки.')
+
+        post_data = request.get_json()
+        refresh_token = post_data.get('refresh_token')
+
+        session = session_service.get_by_refresh_token(refresh_token=refresh_token,
+                                                       fingerprint=fingerprint,
+                                                       user_agent=user_agent)
+        if not session:
+            auth_namespace.abort(400, 'Refresh-токен истек, либо не существует. Нужно залогиниться')
+        access_token = session.user.encode_token()
+        session_service.delete(session)
+        new_refresh_token = str(uuid4())
+
+        session = {
+            'refresh_token': new_refresh_token,
+            'user': session.user,
+            'fingerprint': fingerprint,
+            'user_agent': user_agent,
+        }
+        session_service.create(**session)
+
+        response = {'access_token': access_token, 'refresh_token': new_refresh_token}
+        return response, 201
+
+
 auth_namespace.add_resource(Register, '/register')
 auth_namespace.add_resource(Auth, '/login')
-
+auth_namespace.add_resource(Refresh, '/refresh')

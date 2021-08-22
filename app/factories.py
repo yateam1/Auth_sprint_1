@@ -58,6 +58,7 @@ class SessionFactory(BaseFactory):
     fingerprint = factory.fuzzy.FuzzyText(length=48, prefix='fingerprint_')
     user_agent = factory.Faker('user_agent')
     user = factory.SubFactory(UserFactory)
+    refresh_token = factory.fuzzy.FuzzyText(length=12, prefix='refresh_')
 
 
 class AuthHeaders(NamedTuple):
