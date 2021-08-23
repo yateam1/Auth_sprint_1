@@ -1,5 +1,5 @@
 from typing import NamedTuple
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import factory
@@ -7,6 +7,7 @@ import factory.random
 import factory.fuzzy
 
 from app.db import db
+from app.settings import config
 from app.models import Profile, Role, Session, User
 
 factory.random.reseed_random(0)
@@ -59,6 +60,7 @@ class SessionFactory(BaseFactory):
     user_agent = factory.Faker('user_agent')
     user = factory.SubFactory(UserFactory)
     refresh_token = factory.fuzzy.FuzzyText(length=12, prefix='refresh_')
+    expired = datetime.utcnow() + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int))
 
 
 class AuthHeaders(NamedTuple):
