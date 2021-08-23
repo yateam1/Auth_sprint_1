@@ -120,3 +120,19 @@ def test_correct_change_password(test_app, test_db):
 
     assert resp.status_code == 201
 
+
+def test_incorrect_change_password(test_app, test_db):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    user_data = {
+        'old_password': 'abracadabra',
+        'new_password': 'new_password',
+    }
+
+    resp = client.post(
+        f'/users/{user.id}/change_password',
+        data=json.dumps(user_data),
+        content_type='application/json',
+    )
+
+    assert resp.status_code == 404
