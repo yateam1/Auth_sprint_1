@@ -55,12 +55,15 @@ class SessionFactory(BaseFactory):
     class Meta:
         model = Session
         sqlalchemy_session = db.session
+        exclude = ('now',)
+
+    now = factory.LazyFunction(datetime.utcnow)
 
     fingerprint = factory.fuzzy.FuzzyText(length=48, prefix='fingerprint_')
     user_agent = factory.Faker('user_agent')
     user = factory.SubFactory(UserFactory)
     refresh_token = factory.fuzzy.FuzzyText(length=12, prefix='refresh_')
-    expired = datetime.utcnow() + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int))
+    expired = factory.LazyAttribute(lambda o: o.now + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int)))
 
 
 class AuthHeaders(NamedTuple):

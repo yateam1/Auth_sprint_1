@@ -196,7 +196,7 @@ def test_update_expired_refresh_token(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() - + timedelta(seconds=1),
+        expired=datetime.utcnow() - timedelta(seconds=1),
     )
 
     user_data = {
@@ -215,13 +215,6 @@ def test_update_expired_refresh_token(test_app, test_db, auth_headers):
 
 def test_update_non_existent_refresh_token(test_app, test_db, auth_headers):
     client = test_app.test_client()
-    user = UserFactory(password='password')
-    session = SessionFactory(
-        user=user,
-        user_agent=auth_headers['User-Agent'],
-        fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() - + timedelta(seconds=1),
-    )
 
     user_data = {
         'refresh_token': 'abracadabra',
