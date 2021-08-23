@@ -16,6 +16,7 @@ docker-compose up
 docker-compose run --rm flask db upgrade
 ```
 6. Прогнать тесты
+Перед запуском тестов нужно создать базу данных test-db с доступом от пользователя, указанного в .env
 ```shell
 docker-compose run --rm flask-api pytest
 ```

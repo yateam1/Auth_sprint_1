@@ -1,8 +1,10 @@
 import json
+from datetime import datetime, timedelta
 
 import pytest
 
-from app.factories import UserFactory
+from app.factories import UserFactory, SessionFactory
+from app.models import Session
 from app.services import ProfileService, SessionService
 
 profile_service = ProfileService()
@@ -157,3 +159,79 @@ def test_auth_user_with_incorrect_password(test_app, test_db, auth_headers):
     data = json.loads(resp.data.decode())
     assert resp.status_code == 404
     assert 'Неверный пароль.' in data['message']
+
+
+def test_update_refresh_token(test_app, test_db, auth_headers):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    session = SessionFactory(
+        user=user,
+        user_agent=auth_headers['User-Agent'],
+        fingerprint=auth_headers['Fingerprint'],
+    )
+
+    user_data = {
+        'refresh_token': session.refresh_token,
+    }
+
+    resp = client.post(
+        '/auth/refresh',
+        data=json.dumps(user_data),
+        content_type='application/json',
+        headers=auth_headers
+    )
+
+    data = json.loads(resp.data.decode())
+
+    assert resp.status_code == 201
+    assert session_service.get_by_user(session.user, auth_headers['Fingerprint'], auth_headers['User-Agent']) is not None
+    assert 'access_token' in data.keys()
+    assert 'refresh_token' in data.keys()
+
+
+def test_update_expired_refresh_token(test_app, test_db, auth_headers):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    session = SessionFactory(
+        user=user,
+        user_agent=auth_headers['User-Agent'],
+        fingerprint=auth_headers['Fingerprint'],
+        expired=datetime.utcnow() - + timedelta(seconds=1),
+    )
+
+    user_data = {
+        'refresh_token': session.refresh_token,
+    }
+
+    resp = client.post(
+        '/auth/refresh',
+        data=json.dumps(user_data),
+        content_type='application/json',
+        headers=auth_headers
+    )
+
+    assert resp.status_code == 400
+
+
+def test_update_non_existent_refresh_token(test_app, test_db, auth_headers):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    session = SessionFactory(
+        user=user,
+        user_agent=auth_headers['User-Agent'],
+        fingerprint=auth_headers['Fingerprint'],
+        expired=datetime.utcnow() - + timedelta(seconds=1),
+    )
+
+    user_data = {
+        'refresh_token': 'abracadabra',
+    }
+
+    resp = client.post(
+        '/auth/refresh',
+        data=json.dumps(user_data),
+        content_type='application/json',
+        headers=auth_headers
+    )
+
+    assert resp.status_code == 400
