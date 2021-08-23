@@ -103,3 +103,20 @@ def test_get_list_users(test_app, test_db, count):
     data = json.loads(resp.data.decode())
     assert resp.status_code == 200
     assert count == len(data)
+
+def test_correct_change_password(test_app, test_db):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    user_data = {
+        'old_password': 'password',
+        'new_password': 'new_password',
+    }
+
+    resp = client.post(
+        f'/users/{user.id}/change_password',
+        data=json.dumps(user_data),
+        content_type='application/json',
+    )
+
+    assert resp.status_code == 201
+
