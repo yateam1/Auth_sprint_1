@@ -79,13 +79,13 @@ class UserDetail(Resource):
         return user, 200
 
 
-class UserSetPassword(Resource):
+class UserChangePassword(Resource):
     @users_namespace.marshal_with(user)
     @users_namespace.expect(passwords, validate=True)
     @users_namespace.response(201, 'Успех.')
     @users_namespace.response(404, 'Пользователя <user_id> не существует.')
     @decorators.login_required
-    def post(self, user_id):
+    def patch(self, user_id):
         """Меняет у пользователя user_id пароль."""
         user = user_service.get_by_pk(user_id)
 
@@ -103,4 +103,4 @@ class UserSetPassword(Resource):
 
 users_namespace.add_resource(UserList, '')
 users_namespace.add_resource(UserDetail, '/<user_id>')
-users_namespace.add_resource(UserSetPassword, '/<user_id>/change_password')
+users_namespace.add_resource(UserChangePassword, '/<user_id>/change_password')

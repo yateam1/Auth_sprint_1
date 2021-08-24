@@ -121,7 +121,7 @@ def test_correct_change_password(test_app, test_db, auth_headers):
     )
     auth_headers['Authorization'] = user.encode_token()
 
-    resp = client.post(
+    resp = client.patch(
         f'/users/{user.id}/change_password',
         data=json.dumps(user_data),
         content_type='application/json',
@@ -146,7 +146,7 @@ def test_incorrect_change_password(test_app, test_db, auth_headers):
     )
     auth_headers['Authorization'] = user.encode_token()
 
-    resp = client.post(
+    resp = client.patch(
         f'/users/{user.id}/change_password',
         data=json.dumps(user_data),
         content_type='application/json',
