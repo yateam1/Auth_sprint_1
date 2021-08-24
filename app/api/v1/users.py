@@ -36,10 +36,10 @@ passwords = users_namespace.model(
     },
 )
 
-parser = users_namespace.parser()
-parser.add_argument('Authorization', location='headers')
-parser.add_argument('User-Agent', location='headers')
-parser.add_argument('Fingerprint', location='headers')
+users_parser = users_namespace.parser()
+users_parser.add_argument('Authorization', location='headers')
+users_parser.add_argument('User-Agent', location='headers')
+users_parser.add_argument('Fingerprint', location='headers')
 
 
 class UserList(Resource):

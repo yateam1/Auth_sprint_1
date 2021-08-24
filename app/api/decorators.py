@@ -16,10 +16,9 @@ def login_required(method):
     :param method:
     :return:
     '''
-    access_token = getattr(method, 'Authorization', None)
-
     @wraps(method)
     def wrapper(*args, **kwargs):
+        access_token = api.users_parser.parse_args().get('Authorization')
         try:
             decode_token = User.decode_token(access_token)
         except jwt.exceptions.DecodeError:
