@@ -118,7 +118,6 @@ def test_correct_change_password(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() + timedelta(seconds=1),
     )
     auth_headers['Authorization'] = user.encode_token()
 
@@ -144,7 +143,6 @@ def test_incorrect_change_password(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() + timedelta(seconds=1),
     )
     auth_headers['Authorization'] = user.encode_token()
 

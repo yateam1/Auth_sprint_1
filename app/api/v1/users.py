@@ -87,8 +87,6 @@ class UserSetPassword(Resource):
     def post(self, user_id):
         """Меняет у пользователя user_id пароль."""
         user = user_service.get_by_pk(user_id)
-        if not user:
-            users_namespace.abort(404, f'Пользователя {user_id} не существует.')
 
         post_data = request.get_json()
 
