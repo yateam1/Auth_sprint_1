@@ -35,7 +35,10 @@ class User(BaseModel, db.Model):
 
     @staticmethod
     def decode_token(token: str) -> dict:
-        return jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
+        token_ = jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
+        token_['exp'] = datetime.fromtimestamp(token_['exp'])
+        token_['iat'] = datetime.fromtimestamp(token_['iat'])
+        return token_
 
     def encode_token(self) -> str:
         payload = {

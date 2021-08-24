@@ -1,6 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
+from app.api.decorators import login_required
 from app.bcrypt import bcrypt
 from app.services import UserService
 
@@ -34,6 +35,11 @@ passwords = users_namespace.model(
         'new_password': fields.String(required=True),
     },
 )
+
+parser = users_namespace.parser()
+parser.add_argument('Authorization', location='headers')
+parser.add_argument('User-Agent', location='headers')
+parser.add_argument('Fingerprint', location='headers')
 
 
 class UserList(Resource):
@@ -77,6 +83,7 @@ class UserSetPassword(Resource):
     @users_namespace.expect(passwords, validate=True)
     @users_namespace.response(201, 'Успех.')
     @users_namespace.response(404, 'Пользователя <user_id> не существует.')
+    @login_required(users_namespace, parser)
     def post(self, user_id):
         """Меняет у пользователя user_id пароль."""
         user = user_service.get_by_pk(user_id)
