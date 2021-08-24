@@ -43,6 +43,7 @@ parser.add_argument('Fingerprint', location='headers')
 
 
 class UserList(Resource):
+
     @users_namespace.marshal_with(user, as_list=True)
     def get(self):
         """Возвращает список всех пользователей."""
@@ -83,7 +84,7 @@ class UserSetPassword(Resource):
     @users_namespace.expect(passwords, validate=True)
     @users_namespace.response(201, 'Успех.')
     @users_namespace.response(404, 'Пользователя <user_id> не существует.')
-    @login_required(users_namespace, parser)
+    @login_required
     def post(self, user_id):
         """Меняет у пользователя user_id пароль."""
         user = user_service.get_by_pk(user_id)
