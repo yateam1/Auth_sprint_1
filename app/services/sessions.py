@@ -1,9 +1,19 @@
 from datetime import datetime, timedelta
 
-from app.models import Session
+from app.models import History, Session, User
 from app.services.base import AbstractService
-from app.models import User
 from app.settings import config
+
+
+class HistoryService(AbstractService):
+    model = History
+
+    def get_by_user(self, user: User) -> Session:
+        """Возвращает историю логинов указанного пользователя."""
+        return self.model.query.filter_by(user=user)
+
+
+history_service = HistoryService()
 
 
 class SessionService(AbstractService):
@@ -11,7 +21,9 @@ class SessionService(AbstractService):
 
     def create(self, **kwargs):
         kwargs['expired'] = datetime.utcnow() + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int))
-        return super().create(**kwargs)
+        session = super().create(**kwargs)
+        history_service.create(**kwargs)
+        return session
 
     def get_by_user(self, user: User, fingerprint: str, user_agent: str) -> Session:
         """Возвращает сессию указанного пользователя."""

@@ -2,7 +2,7 @@ from datetime import datetime
 from functools import wraps
 
 from app.models import User
-from app.services import UserService, SessionService
+from app.services import SessionService, UserService
 
 user_service = UserService()
 session_service = SessionService()
