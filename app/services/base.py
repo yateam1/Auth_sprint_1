@@ -18,14 +18,14 @@ class AbstractService(ABC):
         return self.model.query.filter_by(id=pk).first()
 
     def create(self, **kwargs):
-        data = self.model.filter_kwargs(data=kwargs, exclude=['id', 'created_at', 'updated_at'])
+        data = self.model.filter_kwargs(data=kwargs, exclude=['id', 'created', 'updated'])
         instance = self.model(**data)
         db.session.add(instance)
         db.session.commit()
         return instance
 
     def update(self, instance, **kwargs):
-        data = self.model.filter_kwargs(data=kwargs, exclude=['id', 'created_at', 'updated_at'])
+        data = self.model.filter_kwargs(data=kwargs, exclude=['id', 'created', 'updated'])
         for k, v in data.items():
             setattr(instance, k, v)
         db.session.commit()
