@@ -1,14 +1,14 @@
-from typing import NamedTuple
 from datetime import datetime, timedelta
+from typing import NamedTuple
 from uuid import uuid4
 
 import factory
-import factory.random
 import factory.fuzzy
+import factory.random
 
 from app.db import db
+from app.models import History, Profile, Role, Session, User
 from app.settings import config
-from app.models import Profile, Role, Session, User
 
 factory.random.reseed_random(0)
 
@@ -80,3 +80,13 @@ class HeaderFactory(factory.Factory):
         model = AuthHeaders
     fingerprint = factory.fuzzy.FuzzyText(length=48, prefix='fingerprint_')
     user_agent = factory.Faker('user_agent')
+
+
+class HistoryFactory(BaseFactory):
+    class Meta:
+        model = History
+        sqlalchemy_session = db.session
+
+    fingerprint = factory.fuzzy.FuzzyText(length=48, prefix='fingerprint_')
+    user_agent = factory.Faker('user_agent')
+    user = factory.SubFactory(UserFactory)

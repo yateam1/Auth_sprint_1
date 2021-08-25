@@ -28,6 +28,7 @@ class User(BaseModel, db.Model):
                             secondary=users_roles_association,
                             back_populates="users")
     sessions = db.relationship("Session", back_populates="user")
+    history = db.relationship("History", back_populates="user")
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -79,3 +80,12 @@ class Role(BaseModel, db.Model):
     users = db.relationship('User',
                             secondary=users_roles_association,
                             back_populates='roles')
+
+
+class History(BaseModel, db.Model):
+    __tablename__ = 'history'
+
+    fingerprint = db.Column(db.String(255), nullable=False)
+    user_agent = db.Column(db.String(255), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
+    user = db.relationship('User', uselist=False, back_populates='history')

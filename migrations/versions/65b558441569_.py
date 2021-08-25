@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: cd54bef85e34
+Revision ID: 65b558441569
 Revises: 
-Create Date: 2021-08-19 00:13:31.944560
+Create Date: 2021-08-25 02:20:09.409886
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'cd54bef85e34'
+revision = '65b558441569'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -37,6 +37,16 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('username')
     )
+    op.create_table('history',
+    sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
+    sa.Column('created', sa.DateTime(), nullable=False),
+    sa.Column('updated', sa.DateTime(), nullable=True),
+    sa.Column('fingerprint', sa.String(length=255), nullable=False),
+    sa.Column('user_agent', sa.String(length=255), nullable=False),
+    sa.Column('user_id', postgresql.UUID(as_uuid=True), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('profiles',
     sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
     sa.Column('created', sa.DateTime(), nullable=False),
@@ -52,7 +62,6 @@ def upgrade():
     sa.Column('updated', sa.DateTime(), nullable=True),
     sa.Column('fingerprint', sa.String(length=255), nullable=False),
     sa.Column('user_agent', sa.String(length=255), nullable=False),
-    sa.Column('access_token', sa.String(length=255), nullable=False),
     sa.Column('refresh_token', sa.String(length=255), nullable=False),
     sa.Column('user_id', postgresql.UUID(as_uuid=True), nullable=True),
     sa.Column('expired', sa.DateTime(), nullable=False),
@@ -73,6 +82,7 @@ def downgrade():
     op.drop_table('users_roles')
     op.drop_table('sessions')
     op.drop_table('profiles')
+    op.drop_table('history')
     op.drop_table('users')
     op.drop_table('roles')
     # ### end Alembic commands ###

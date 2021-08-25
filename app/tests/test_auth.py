@@ -3,12 +3,12 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from app.factories import UserFactory, SessionFactory
-from app.models import Session
-from app.services import ProfileService, SessionService
+from app.factories import SessionFactory, UserFactory
+from app.services import HistoryService, ProfileService, SessionService
 
 profile_service = ProfileService()
 session_service = SessionService()
+history_service = HistoryService()
 
 
 def test_register_user(test_app, test_db):
@@ -72,14 +72,17 @@ def test_register_user_without_required_data(test_app, test_db, payload):
     'headers',
     [{}, {'User-Agent': 'user_agent'}],
 )
-def test_auth_user_without_required_headers(test_app, test_db, headers):
+@pytest.mark.parametrize(
+    'url, user_data',
+    (
+        ('login', {'username': '', 'password': ''}),
+        ('refresh', {'refresh_token': ''})
+    ),
+)
+def test_auth_user_without_required_headers(test_app, test_db, headers, url, user_data):
     client = test_app.test_client()
-    user_data = {
-        'username': 'we1tkind',
-        'password': 'qwerty',
-    }
     resp = client.post(
-        '/auth/login',
+        f'/auth/{url}',
         content_type='application/json',
         data=json.dumps(user_data),
         headers=headers
@@ -121,6 +124,7 @@ def test_auth_user(test_app, test_db, auth_headers):
     )
     data = json.loads(resp.data.decode())
     assert session_service.get_by_user(user, auth_headers['Fingerprint'], auth_headers['User-Agent']) is not None
+    assert history_service.get_by_user(user).count() == 1
     assert resp.status_code == 200
     assert 'access_token' in data.keys()
     assert 'refresh_token' in data.keys()

@@ -36,10 +36,20 @@ passwords = users_namespace.model(
     },
 )
 
+
 users_parser = users_namespace.parser()
 users_parser.add_argument('Authorization', location='headers')
 users_parser.add_argument('User-Agent', location='headers')
 users_parser.add_argument('Fingerprint', location='headers')
+
+history = users_namespace.model(
+    'History',
+    {
+        'fingerprint': fields.String(readOnly=True),
+        'user_agent': fields.String(readOnly=True),
+        'created': fields.DateTime(readOnly=True),
+    }
+)
 
 
 class UserList(Resource):
@@ -101,6 +111,20 @@ class UserChangePassword(Resource):
         return user, 201
 
 
+class UserHistory(Resource):
+    @users_namespace.marshal_with(history, as_list=True)
+    @users_namespace.response(200, 'Успех.')
+    @users_namespace.response(404, 'Пользователя <user_id> не существует.')
+    def get(self, user_id):
+        """Возвращает историю логинов пользователя."""
+        user = user_service.get_by_pk(user_id)
+        if not user:
+            users_namespace.abort(404, f'Пользователя {user_id} не существует.')
+        return user.history, 200
+
+
 users_namespace.add_resource(UserList, '')
 users_namespace.add_resource(UserDetail, '/<user_id>')
 users_namespace.add_resource(UserChangePassword, '/<user_id>/change_password')
+users_namespace.add_resource(UserHistory, '/<user_id>/history')
+

@@ -1,10 +1,9 @@
 import json
-from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
 
-from app.factories import UserFactory, SessionFactory
+from app.factories import HistoryFactory, UserFactory
 
 
 def test_create_user(test_app, test_db):
@@ -114,11 +113,6 @@ def test_correct_change_password(test_app, test_db, auth_headers):
         'new_password': 'new_password',
     }
 
-    session = SessionFactory(
-        user=user,
-        user_agent=auth_headers['User-Agent'],
-        fingerprint=auth_headers['Fingerprint'],
-    )
     auth_headers['Authorization'] = user.encode_token()
 
     resp = client.patch(
@@ -139,11 +133,6 @@ def test_incorrect_change_password(test_app, test_db, auth_headers):
         'new_password': 'new_password',
     }
 
-    session = SessionFactory(
-        user=user,
-        user_agent=auth_headers['User-Agent'],
-        fingerprint=auth_headers['Fingerprint'],
-    )
     auth_headers['Authorization'] = user.encode_token()
 
     resp = client.patch(
@@ -154,3 +143,29 @@ def test_incorrect_change_password(test_app, test_db, auth_headers):
     )
 
     assert resp.status_code == 404
+
+
+def test_history_correct_user(test_app, test_db):
+    client = test_app.test_client()
+    user = UserFactory(password='password')
+    history = HistoryFactory(user=user)
+    resp = client.get(
+        f'/users/{user.id}/history',
+        content_type='application/json',
+    )
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 200
+    assert data[0]['fingerprint'] == history.fingerprint
+    assert len(user.history) == 1
+
+
+def test_history_inorrect_user(test_app, test_db):
+    client = test_app.test_client()
+    user_id = uuid4()
+    resp = client.get(
+        f'/users/{user_id}/history',
+        content_type='application/json',
+    )
+    data = json.loads(resp.data.decode())
+    assert resp.status_code == 404
+    assert f'Пользователя {user_id} не существует.' == data['message']
