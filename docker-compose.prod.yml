@@ -25,11 +25,11 @@ services:
         args:
           FLASK_ENV: "production"
       restart: unless-stopped
-    command: sh ./docker/flask-api/gunicorn.sh
+    command: sh ./docker/flask-api/uwsgi.sh
     networks:
       - proxynet
     expose:
-      - 8000
+      - 5000
 
 volumes:
   caddy-config:

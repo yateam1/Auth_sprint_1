@@ -1,28 +1,22 @@
 # See https://caddyserver.com/docs
 
-# Email for Let's Encrypt expiration notices
 {
   email {$TLS_EMAIL}
 }
 
-# "www" redirect to "non-www" version
 www.{$DOMAIN_NAME} {
   redir https://{$DOMAIN_NAME}{uri}
 }
 
 {$DOMAIN_NAME} {
-  # HTTPS options:
   header Strict-Transport-Security max-age=31536000;
 
-  # Removing some headers for improved security:
   header -Server
 
-  # Serving dynamic requests:
-  reverse_proxy @excludeDirs flask-api:8000
+  reverse_proxy flask-api:5000
 
   encode gzip
 
-  # Logs:
   log {
 	  output stdout
   }
