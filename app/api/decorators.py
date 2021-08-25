@@ -53,7 +53,7 @@ def user_role(role_name):
             user = user_service.get_by_pk(user_id)
             role = role_service.get_role_by_name(role_name)
 
-            if not role_service.is_user_equ_role(role=role, user=user):
+            if not role in user.roles:
                 return api.users_namespace.abort(404, f'Пользователю не назначена роль {role_name}')
 
             return method(args, **kwargs)
