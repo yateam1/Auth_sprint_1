@@ -72,14 +72,17 @@ def test_register_user_without_required_data(test_app, test_db, payload):
     'headers',
     [{}, {'User-Agent': 'user_agent'}],
 )
-def test_auth_user_without_required_headers(test_app, test_db, headers):
+@pytest.mark.parametrize(
+    'url, user_data',
+    (
+        ('login', {'username': '', 'password': ''}),
+        ('refresh', {'refresh_token': ''})
+    ),
+)
+def test_auth_user_without_required_headers(test_app, test_db, headers, url, user_data):
     client = test_app.test_client()
-    user_data = {
-        'username': 'we1tkind',
-        'password': 'qwerty',
-    }
     resp = client.post(
-        '/auth/login',
+        f'/auth/{url}',
         content_type='application/json',
         data=json.dumps(user_data),
         headers=headers

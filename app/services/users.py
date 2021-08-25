@@ -1,5 +1,4 @@
-from uuid import UUID
-
+from typing import Iterable
 from app.bcrypt import bcrypt
 from app.models import Profile, User
 from app.services.base import AbstractService
@@ -19,6 +18,10 @@ class UserService(AbstractService):
     def get_user_by_username(self, username: str):
         """Возвращает пользователя с юзернеймом username."""
         return self.model.query.filter_by(username=username).first()
+
+    def get_by_usernames(self, usernames: Iterable):
+        """Возвращает пользователей с совпадающими username с usernames."""
+        return self.model.query.filter(self.model.username.in_(usernames))
 
     def create(self, **kwargs):
         user = super().create(**kwargs)
