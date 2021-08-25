@@ -3,6 +3,7 @@ import jwt
 from datetime import datetime
 from functools import wraps
 
+from app.api.v1.parsers import headers_parser
 from app import api
 from app.models import User
 
@@ -21,7 +22,7 @@ def login_required(method):
     '''
     @wraps(method)
     def wrapper(*args, **kwargs):
-        access_token = api.users_parser.parse_args().get('Authorization')
+        access_token = headers_parser.parse_args().get('Authorization')
         try:
             decode_token = User.decode_token(access_token)
         except jwt.exceptions.DecodeError:
@@ -49,7 +50,7 @@ def user_role(role_name):
     def decorator(method):
         @wraps(method)
         def wrapper(*args, **kwargs):
-            access_token = api.users_parser.parse_args().get('Authorization')
+            access_token = headers_parser.parse_args().get('Authorization')
             decode_token = User.decode_token(access_token)
             user_id = decode_token['user_id']
             user = user_service.get_by_pk(user_id)
