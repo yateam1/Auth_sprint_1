@@ -1,7 +1,6 @@
 from flask_restx import Api
 
-from app.api.v1 import (auth_namespace, permissions_namespace, ping_namespace,
-                        users_namespace)
+from .v1 import auth_namespace, permissions_namespace, ping_namespace, users_namespace, users_parser
 
 api = Api(version='1.0', title='Auth API')
 

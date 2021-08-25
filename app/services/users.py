@@ -1,6 +1,6 @@
 from typing import Iterable
 from app.bcrypt import bcrypt
-from app.models import Profile, User
+from app.models import Profile, User, Role
 from app.services.base import AbstractService
 
 

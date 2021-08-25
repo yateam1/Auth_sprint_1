@@ -1,7 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
-from app.api.decorators import login_required
+from app.api import decorators
 from app.bcrypt import bcrypt
 from app.services import UserService
 
@@ -36,6 +36,12 @@ passwords = users_namespace.model(
     },
 )
 
+
+users_parser = users_namespace.parser()
+users_parser.add_argument('Authorization', location='headers')
+users_parser.add_argument('User-Agent', location='headers')
+users_parser.add_argument('Fingerprint', location='headers')
+
 history = users_namespace.model(
     'History',
     {
@@ -45,13 +51,9 @@ history = users_namespace.model(
     }
 )
 
-parser = users_namespace.parser()
-parser.add_argument('Authorization', location='headers')
-parser.add_argument('User-Agent', location='headers')
-parser.add_argument('Fingerprint', location='headers')
-
 
 class UserList(Resource):
+
     @users_namespace.marshal_with(user, as_list=True)
     def get(self):
         """Возвращает список всех пользователей."""
@@ -87,13 +89,13 @@ class UserDetail(Resource):
         return user, 200
 
 
-class UserSetPassword(Resource):
+class UserChangePassword(Resource):
     @users_namespace.marshal_with(user)
     @users_namespace.expect(passwords, validate=True)
     @users_namespace.response(201, 'Успех.')
     @users_namespace.response(404, 'Пользователя <user_id> не существует.')
-    @login_required(users_namespace, parser)
-    def post(self, user_id):
+    @decorators.login_required
+    def patch(self, user_id):
         """Меняет у пользователя user_id пароль."""
         user = user_service.get_by_pk(user_id)
 
@@ -123,5 +125,6 @@ class UserHistory(Resource):
 
 users_namespace.add_resource(UserList, '')
 users_namespace.add_resource(UserDetail, '/<user_id>')
-users_namespace.add_resource(UserSetPassword, '/<user_id>/change_password')
+users_namespace.add_resource(UserChangePassword, '/<user_id>/change_password')
 users_namespace.add_resource(UserHistory, '/<user_id>/history')
+

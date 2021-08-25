@@ -1,47 +1,63 @@
+import jwt
+
 from datetime import datetime
 from functools import wraps
 
+from app import api
 from app.models import User
-from app.services import SessionService, UserService
+
+from app.services import UserService, RoleService
+
 
 user_service = UserService()
-session_service = SessionService()
+role_service = RoleService()
 
 
-def login_required(namespace, parser):
+def login_required(method):
+    '''
+    Проверяем валидность access_token
+    :param method:
+    :return:
+    '''
+    @wraps(method)
+    def wrapper(*args, **kwargs):
+        access_token = api.users_parser.parse_args().get('Authorization')
+        try:
+            decode_token = User.decode_token(access_token)
+        except jwt.exceptions.DecodeError:
+            return api.users_namespace.abort(404, 'Неверный формат токена.')
 
-    def is_user_login(func):
-        @wraps(func)
+        user_id = decode_token['user_id']
+        expired = decode_token['exp']
+
+        user = user_service.get_by_pk(user_id)
+        if not user:
+            return api.users_namespace.abort(404, f'Пользователя {user.username} не существует.')
+        if expired <= datetime.utcnow():
+            return api.users_namespace.abort(404, 'Срок access токена истек. Нужно залогиниться')
+
+        return method(args, **kwargs)
+    return wrapper
+
+
+def user_role(role_name):
+    '''
+    Проверяем принадлежность пользователя роли
+    :param role_name:
+    :return:
+    '''
+    def decorator(method):
+        @wraps(method)
         def wrapper(*args, **kwargs):
-            '''
-            Проверяем валидность access_token
-            :param args:
-            :param kwargs:
-            :return:
-            '''
-
-            args = parser.parse_args()
-            access_token = args.get('Authorization')
-            fingerprint = args.get('Fingerprint')
-            user_agent = args.get('User-Agent')
-
-            user_id = User.decode_token(access_token)['user_id']
-
+            access_token = api.users_parser.parse_args().get('Authorization')
+            decode_token = User.decode_token(access_token)
+            user_id = decode_token['user_id']
             user = user_service.get_by_pk(user_id)
-            if not user:
-                namespace.abort(404, f'Пользователя не существует.')
+            role = role_service.get_role_by_name(role_name)
 
-            session = session_service.get_by_user(user, fingerprint, user_agent)
-            if not session:
-                namespace.abort(404, f'У пользователя нет активной сессии на этом устройстве.')
+            if not role in user.roles:
+                return api.users_namespace.abort(404, f'Пользователю не назначена роль {role_name}')
 
-            now = datetime.utcnow()
-            expired = user.decode_token(access_token)['exp']
-
-            if expired <= now:
-                namespace.abort(404, f'Срок действия access_token истек. Нужно залогиниться')
-
-            return func(args, **kwargs)
+            return method(args, **kwargs)
         return wrapper
-
-    return is_user_login
+    return decorator
