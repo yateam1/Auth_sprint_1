@@ -26,6 +26,7 @@ services:
     restart: unless-stopped
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d/
     networks:
       - webnet
     env_file: ./config/.env
