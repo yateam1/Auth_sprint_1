@@ -6,48 +6,68 @@ import pytest
 from app.factories import RoleFactory, UserFactory
 
 
-def test_create_role(test_app, test_db):
+def test_create_role(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     client = test_app.test_client()
+
     role_data = {'name': 'admin'}
     resp = client.post(
         '/permissions/roles',
         data=json.dumps(role_data),
         content_type='application/json',
+        headers=auth_headers
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 201
     assert f'Роль {role_data["name"]} добавлена.' == data['message']
 
 
-def test_create_role_without_required_fields(test_app, test_db):
+def test_create_role_without_required_fields(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     client = test_app.test_client()
     resp = client.post(
         '/permissions/roles',
         data=json.dumps({}),
         content_type='application/json',
+        headers=auth_headers
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400
     assert 'Input payload validation failed' == data['message']
 
 
-def test_create_role_with_same_name(test_app, test_db):
+def test_create_role_with_same_name(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     client = test_app.test_client()
     role = RoleFactory(name='admin')
     resp = client.post(
         '/permissions/roles',
         data=json.dumps({'name': 'admin'}),
         content_type='application/json',
+        headers=auth_headers
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400
     assert f'Роль с именем {role.name} уже существует.' == data['message']
 
 
-def test_get_correct_role(test_app, test_db):
+def test_get_correct_role(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role = RoleFactory()
     client = test_app.test_client()
-    resp = client.get(f'/permissions/roles/{role.id}', content_type='application/json')
+    resp = client.get(
+        f'/permissions/roles/{role.id}',
+        content_type='application/json',
+        headers=auth_headers
+    )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 200
     assert {
@@ -59,23 +79,31 @@ def test_get_correct_role(test_app, test_db):
     } == data
 
 
-def test_get_incorrect_role(test_app, test_db):
+def test_get_incorrect_role(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role_id = uuid4()
     client = test_app.test_client()
-    resp = client.get(f'permissions/roles/{role_id}', content_type='application/json')
+    resp = client.get(f'permissions/roles/{role_id}', content_type='application/json', headers=auth_headers)
     data = json.loads(resp.data.decode())
     assert resp.status_code == 404
     assert f'Роли {role_id} не существует.' == data['message']
 
 
-def test_patch_role(test_app, test_db):
+def test_patch_role(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role = RoleFactory()
     client = test_app.test_client()
     new_role_name = f'{role.name}_'
     resp = client.patch(
         f'/permissions/roles/{role.id}',
         data=json.dumps({'name': new_role_name}),
-        content_type='application/json')
+        content_type='application/json',
+        headers=auth_headers
+    )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 200
     assert f'Роль {role.id} обновлена.' == data['message']
@@ -83,31 +111,44 @@ def test_patch_role(test_app, test_db):
 
 
 @pytest.mark.parametrize('postfix', ['', '/users'])
-def test_patch_incorrect_role(test_app, test_db, postfix):
+def test_patch_incorrect_role(test_app, test_db, postfix, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role_id = uuid4()
     client = test_app.test_client()
     resp = client.patch(
         f'/permissions/roles/{role_id}{postfix}',
         data=json.dumps({'name': 'admin'}),
-        content_type='application/json')
+        content_type='application/json',
+        headers=auth_headers
+    )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 404
     assert f'Роли {role_id} не существует.' == data['message']
 
 
-def test_patch_role_same_name(test_app, test_db):
+def test_patch_role_same_name(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role = RoleFactory()
     client = test_app.test_client()
     resp = client.patch(
         f'/permissions/roles/{role.id}',
         data=json.dumps({'name': role.name}),
-        content_type='application/json')
+        content_type='application/json',
+        headers=auth_headers
+    )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400
     assert f'Роль с именем {role.name} уже существует.' == data['message']
 
 
-def test_patch_role_add_and_remove_users(test_app, test_db):
+def test_patch_role_add_and_remove_users(test_app, test_db, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     role_users = UserFactory.create_batch(5, password='password')
     role = RoleFactory(users=role_users)
     new_users = UserFactory.create_batch(5, password='password')
@@ -119,16 +160,20 @@ def test_patch_role_add_and_remove_users(test_app, test_db):
     resp = client.patch(
         f'/permissions/roles/{role.id}/users',
         data=json.dumps(data),
-        content_type='application/json')
+        content_type='application/json',
+        headers=auth_headers)
     assert [role_users[0], *new_users[1:]] == role.users
     assert resp.status_code == 201
 
 
 @pytest.mark.parametrize('count', [1, 10, 0])
-def test_get_list_roles(test_app, test_db, count):
+def test_get_list_roles(test_app, test_db, count, auth_headers):
+    user = UserFactory(password='password')
+    auth_headers['Authorization'] = user.encode_token()
+
     RoleFactory.create_batch(count)
     client = test_app.test_client()
-    resp = client.get(f'permissions/roles', content_type='application/json')
+    resp = client.get(f'permissions/roles', content_type='application/json', headers=auth_headers)
     data = json.loads(resp.data.decode())
     assert resp.status_code == 200
     assert count == len(data)

@@ -1,14 +1,12 @@
-import jwt
-
 from datetime import datetime
 from functools import wraps
 
+import jwt
+from flask_restx import namespace
+
 from app.api.v1.parsers import headers_parser
-from app import api
 from app.models import User
-
 from app.services import UserService, RoleService
-
 
 user_service = UserService()
 role_service = RoleService()
@@ -33,9 +31,9 @@ def login_required(method):
 
         user = user_service.get_by_pk(user_id)
         if not user:
-            return api.users_namespace.abort(404, f'Пользователя {user.username} не существует.')
+            return namespace.abort(404, f'Пользователя {user.username} не существует.')
         if expired <= datetime.utcnow():
-            return api.users_namespace.abort(404, 'Срок access токена истек. Нужно залогиниться')
+            return namespace.abort(404, 'Срок access токена истек. Нужно залогиниться')
 
         return method(args, **kwargs)
     return wrapper
@@ -57,7 +55,7 @@ def user_role(role_name):
             role = role_service.get_role_by_name(role_name)
 
             if not role in user.roles:
-                return api.users_namespace.abort(404, f'Пользователю не назначена роль {role_name}')
+                return namespace.abort(404, f'Пользователю не назначена роль {role_name}')
 
             return method(args, **kwargs)
         return wrapper

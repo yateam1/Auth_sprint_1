@@ -1,6 +1,7 @@
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
+from app.api.decorators import login_required
 from app.services import RoleService, UserService
 from app.api.v1.users import user
 
@@ -31,6 +32,7 @@ updated_users = permissions_namespace.model(
 
 class RoleList(Resource):
     @permissions_namespace.marshal_with(role, as_list=True)
+    @login_required
     def get(self):
         """Список всех ролей."""
         return role_service.get_all(), 200
@@ -38,6 +40,7 @@ class RoleList(Resource):
     @permissions_namespace.expect(role, validate=True)
     @permissions_namespace.response(201, 'Добавлена новая роль <role_name>.')
     @permissions_namespace.response(400, 'Роль уже существует.')
+    @login_required
     def post(self):
         """Добавление новой роли."""
         post_data = request.get_json()
@@ -57,6 +60,7 @@ class RoleDetail(Resource):
     @permissions_namespace.marshal_with(role)
     @permissions_namespace.response(200, 'Успех.')
     @permissions_namespace.response(404, 'Роли <role_id> не существует.')
+    @login_required
     def get(self, role_id):
         """Возвращает одну роль."""
         role = role_service.get_by_pk(role_id)
@@ -65,9 +69,10 @@ class RoleDetail(Resource):
         return role, 200
 
     @permissions_namespace.expect(role, validate=True)
-    @permissions_namespace.response(200, "Роль <user_id> обновлёна.")
+    @permissions_namespace.response(200, "Роль <role_id> обновлёна.")
     @permissions_namespace.response(400, "Роль с именем <name> уже существует.")
-    @permissions_namespace.response(404, "Роли <user_id> не существует.")
+    @permissions_namespace.response(404, "Роли <role_id> не существует.")
+    @login_required
     def patch(self, role_id):
         """Обновление роли."""
         post_data = request.get_json()
@@ -93,6 +98,7 @@ class RoleUsers(Resource):
     @permissions_namespace.expect(updated_users, validate=True)
     @permissions_namespace.response(201, 'Пользователи обновлены.')
     @permissions_namespace.response(404, 'Роли <role_id> не существует.')
+    @login_required
     def patch(self, role_id):
         """Добавляет/удаляет пользователей к роли."""
         role = role_service.get_by_pk(role_id)

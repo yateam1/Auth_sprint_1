@@ -43,11 +43,6 @@ tokens = auth_namespace.clone(
     'Access and refresh tokens', refresh_token, {'access_token': fields.String(required=True)}
 )
 
-# users_parser = auth_namespace.parser()
-# users_parser.add_argument('Authorization', location='headers')
-# users_parser.add_argument('User-Agent', location='headers')
-# users_parser.add_argument('Fingerprint', location='headers')
-
 
 class Register(Resource):
     @auth_namespace.marshal_with(user)

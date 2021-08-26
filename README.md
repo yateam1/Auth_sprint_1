@@ -1,4 +1,8 @@
 # Микросервис Auth
+## Архитектура
+В качестве веб-сервера используется caddy, как наиболее простой в настройке, но в тоже время и функциональный.
+Основное хранилище данных — Postgres, для хранения сессий используется Redis.
+![Alt text](https://erdyakov.notion.site/image/https%3A%2F%2F316129.selcdn.ru%2Fpublic%2Fdiagram.png?table=block&id=bc0585ff-85c0-4eff-a1b3-421996ad722f&spaceId=adc1ac53-04a0-4cc7-b2aa-dd8d81f6dc5e&userId=&cache=v2 "a title")
 ## Демо
 https://yandex.in.net
 ## Запуск приложения в проде
