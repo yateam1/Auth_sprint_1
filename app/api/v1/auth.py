@@ -3,8 +3,10 @@ from uuid import uuid4
 from flask import request
 from flask_restx import Namespace, Resource, fields
 
+from .parsers import headers_parser
 from app.bcrypt import bcrypt
 from app.services import SessionService, UserService
+
 
 auth_namespace = Namespace('auth')
 
@@ -41,11 +43,6 @@ tokens = auth_namespace.clone(
     'Access and refresh tokens', refresh_token, {'access_token': fields.String(required=True)}
 )
 
-parser = auth_namespace.parser()
-parser.add_argument('Authorization', location='headers')
-parser.add_argument('User-Agent', location='headers')
-parser.add_argument('Fingerprint', location='headers')
-
 
 class Register(Resource):
     @auth_namespace.marshal_with(user)
@@ -73,7 +70,7 @@ class Auth(Resource):
     @auth_namespace.response(404, 'Пользователя не существует.')
     def post(self):
         """Аутентификация пользователя."""
-        args = parser.parse_args()
+        args = headers_parser.parse_args()
         fingerprint = args.get('Fingerprint')
         user_agent = args.get('User-Agent')
         if not all((fingerprint, user_agent)):
@@ -111,7 +108,7 @@ class Refresh(Resource):
     @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
     def post(self):
         """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
-        args = parser.parse_args()
+        args = headers_parser.parse_args()
         fingerprint = args.get('Fingerprint')
         user_agent = args.get('User-Agent')
         if not all((fingerprint, user_agent)):
