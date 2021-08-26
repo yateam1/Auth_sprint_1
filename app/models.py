@@ -46,7 +46,7 @@ class User(BaseModel, db.Model):
             'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
             'iat': datetime.utcnow(),
             'user_id': str(self.id),
-            'roles': self.roles,
+            'roles': [role.name for role in self.roles],
             'is_super': self.is_super,
         }
         return jwt.encode(
