@@ -31,5 +31,5 @@ class UserService(AbstractService):
 
     def update(self, user, **kwargs):
         if kwargs.get('password'):
-            kwargs['password'] = bcrypt.generate_password_hash(kwargs['password']).decode()
+            kwargs['password'] = user.hash_password(kwargs['password'])
         return super().update(user, **kwargs)

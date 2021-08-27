@@ -32,7 +32,16 @@ class User(BaseModel, db.Model):
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.password = bcrypt.generate_password_hash(password).decode()
+        self.password = self.hash_password(password)
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Хеширование пароля."""
+        return bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        """Проверка пароля на равенство с хешом."""
+        return bcrypt.check_password_hash(self.password, password)
 
     @staticmethod
     def decode_token(token: str) -> dict:

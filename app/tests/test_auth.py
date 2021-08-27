@@ -144,7 +144,7 @@ def test_auth_incorrect_user(test_app, test_db, auth_headers):
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 404
-    assert 'Пользователя не существует.' in data['message']
+    assert 'Неверный пароль.' in data['message']
 
 
 def test_auth_user_with_incorrect_password(test_app, test_db, auth_headers):
