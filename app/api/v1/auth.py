@@ -4,7 +4,6 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from .parsers import headers_parser
-from app.bcrypt import bcrypt
 from app.services import SessionService, UserService
 
 
@@ -81,7 +80,7 @@ class Auth(Resource):
         password = post_data.get('password')
 
         user = user_service.get_user_by_username(username)
-        if not user or bcrypt.check_password_hash(user.password, password):
+        if not (user and user.check_password(password)):
             auth_namespace.abort(404, 'Неверный пароль.')
 
         access_token = user.encode_token()

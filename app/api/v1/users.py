@@ -2,7 +2,6 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from app.api.decorators import login_required
-from app.bcrypt import bcrypt
 from app.services import UserService
 
 user_service = UserService()
@@ -96,7 +95,7 @@ class UserChangePassword(Resource):
         post_data = request.get_json()
 
         old_password = post_data.get('old_password')
-        if not bcrypt.check_password_hash(user.password, old_password):
+        if not user.check_password(old_password):
             users_namespace.abort(404, 'Неверный пароль.')
 
         new_password = post_data.get('new_password')
