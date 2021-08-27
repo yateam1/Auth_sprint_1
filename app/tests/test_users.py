@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 
 from app.factories import HistoryFactory, UserFactory
+from app.tests.conftest import get_user_id_from_token
 
 
 def test_create_user(test_app, test_db):
@@ -105,41 +106,36 @@ def test_get_list_users(test_app, test_db, count):
     assert count == len(data)
 
 
-def test_correct_change_password(test_app, test_db, auth_headers):
+def test_correct_change_password(test_app, test_db, user_headers):
     client = test_app.test_client()
-    user = UserFactory(password='password')
     user_data = {
         'old_password': 'password',
         'new_password': 'new_password',
     }
 
-    auth_headers['Authorization'] = user.encode_token()
 
     resp = client.patch(
-        f'/users/{user.id}/change_password',
+        f'/users/{get_user_id_from_token(user_headers["Authorization"])}/change_password',
         data=json.dumps(user_data),
         content_type='application/json',
-        headers=auth_headers,
+        headers=user_headers,
     )
 
     assert resp.status_code == 201
 
 
-def test_incorrect_change_password(test_app, test_db, auth_headers):
+def test_incorrect_change_password(test_app, test_db, user_headers):
     client = test_app.test_client()
-    user = UserFactory(password='password')
     user_data = {
         'old_password': 'abracadabra',
         'new_password': 'new_password',
     }
 
-    auth_headers['Authorization'] = user.encode_token()
-
     resp = client.patch(
-        f'/users/{user.id}/change_password',
+        f'/users/{get_user_id_from_token(user_headers["Authorization"])}/change_password',
         data=json.dumps(user_data),
         content_type='application/json',
-        headers=auth_headers,
+        headers=user_headers,
     )
 
     assert resp.status_code == 404
