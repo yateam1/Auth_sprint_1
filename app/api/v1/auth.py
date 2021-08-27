@@ -81,9 +81,7 @@ class Auth(Resource):
         password = post_data.get('password')
 
         user = user_service.get_user_by_username(username)
-        if not user:
-            auth_namespace.abort(404, 'Пользователя не существует.')
-        if not bcrypt.check_password_hash(user.password, password):
+        if not user or bcrypt.check_password_hash(user.password, password):
             auth_namespace.abort(404, 'Неверный пароль.')
 
         access_token = user.encode_token()
