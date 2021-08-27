@@ -22,26 +22,20 @@ def login_required(method):
     def wrapper(*args, **kwargs):
         access_token = headers_parser.parse_args().get('Authorization')
         try:
-            decode_token = User.decode_token(access_token)
+            User.decode_token(access_token)
         except jwt.exceptions.DecodeError:
-            return api.users_namespace.abort(404, 'Неверный формат токена.')
-
-        user_id = decode_token['user_id']
-        expired = decode_token['exp']
-
-        user = user_service.get_by_pk(user_id)
-        if not user:
-            return namespace.abort(404, f'Пользователя {user.username} не существует.')
-        if expired <= datetime.utcnow():
-            return namespace.abort(404, 'Срок access токена истек. Нужно залогиниться')
+            return namespace.abort(404, 'Неверный формат токена.')
+        except jwt.exceptions.ExpiredSignatureErro:
+            return namespace.abort(404, 'Срок действия токен истек.')
 
         return method(args, **kwargs)
     return wrapper
 
 
-def user_role(role_name):
+def does_user_have_role(role_name):
     '''
-    Проверяем принадлежность пользователя роли
+    Проверяем принадлежность пользователя роли.
+    Данный декоратор применять после декоратора login_required.
     :param role_name:
     :return:
     '''
@@ -50,11 +44,7 @@ def user_role(role_name):
         def wrapper(*args, **kwargs):
             access_token = headers_parser.parse_args().get('Authorization')
             decode_token = User.decode_token(access_token)
-            user_id = decode_token['user_id']
-            user = user_service.get_by_pk(user_id)
-            role = role_service.get_role_by_name(role_name)
-
-            if not role in user.roles:
+            if role_name not in decode_token['roles']:
                 return namespace.abort(404, f'Пользователю не назначена роль {role_name}')
 
             return method(args, **kwargs)
