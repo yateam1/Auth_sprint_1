@@ -58,7 +58,7 @@ class Profile(BaseModel, db.Model):
     __tablename__ = 'profiles'
 
     email = db.Column(db.String(128), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
     user = db.relationship('User', back_populates='profile')
 
 
