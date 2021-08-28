@@ -30,6 +30,7 @@ updated_users = permissions_namespace.model(
     }
 )
 
+
 class RoleList(Resource):
     @permissions_namespace.marshal_with(role, as_list=True)
     @login_required

@@ -5,7 +5,7 @@ from flask_restx import Namespace, Resource, fields
 
 from .parsers import headers_parser
 from app.bcrypt import bcrypt
-from app.services import SessionService, UserService
+from app.services import SessionService, UserService, JWTService
 
 
 auth_namespace = Namespace('auth')
@@ -86,7 +86,7 @@ class Auth(Resource):
         if not bcrypt.check_password_hash(user.password, password):
             auth_namespace.abort(404, 'Неверный пароль.')
 
-        access_token = user.encode_token()
+        access_token = JWTService.encode_token(user=user)
         refresh_token = str(uuid4())
         session = {
             'refresh_token': refresh_token,
@@ -122,7 +122,7 @@ class Refresh(Resource):
                                                        user_agent=user_agent)
         if not session:
             auth_namespace.abort(400, 'Refresh-токен истек, либо не существует. Нужно залогиниться')
-        access_token = session.user.encode_token()
+        access_token = JWTService.encode_token(user=session.user)
         session_service.delete(session)
         new_refresh_token = str(uuid4())
 

@@ -34,25 +34,6 @@ class User(BaseModel, db.Model):
         super().__init__(**kwargs)
         self.password = bcrypt.generate_password_hash(password).decode()
 
-    @staticmethod
-    def decode_token(token: str) -> dict:
-        token_ = jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
-        token_['exp'] = datetime.fromtimestamp(token_['exp'])
-        token_['iat'] = datetime.fromtimestamp(token_['iat'])
-        return token_
-
-    def encode_token(self) -> str:
-        payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
-            'iat': datetime.utcnow(),
-            'user_id': str(self.id),
-            'roles': [role.name for role in self.roles],
-            'is_super': self.is_super,
-        }
-        return jwt.encode(
-            payload, config('SECRET_KEY'), algorithm='HS256'
-        )
-
 
 class Profile(BaseModel, db.Model):
     __tablename__ = 'profiles'
