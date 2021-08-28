@@ -26,9 +26,15 @@ def test_register_user(test_app, test_db, auth_headers):
     )
     data = json.loads(resp.data.decode())
     profile = profile_service.get_by_email(user_data['email'])
+    session = session_service.get_by_user(
+        user=profile.user,
+        fingerprint=auth_headers['Fingerprint'],
+        user_agent=auth_headers['User-Agent'],
+    )
+
     assert profile is not None
     assert resp.status_code == 201
-    assert user_data['username'] == data['username']
+    assert session.refresh_token == data['refresh_token']
 
 
 def test_register_user_with_same_username(test_app, test_db, auth_headers):
@@ -51,19 +57,20 @@ def test_register_user_with_same_username(test_app, test_db, auth_headers):
 
 
 @pytest.mark.parametrize(
-    'payload',
+    'user_data',
     [{'email': 'sa@prg.re', 'password': 'qwerty'},
      {'email': 'sa@prg.re', 'username': 'qwerty'},
      {},
      {'username': 'qwerty'},
      ],
 )
-def test_register_user_without_required_data(test_app, test_db, payload):
+def test_register_user_without_required_data(test_app, test_db, user_data, auth_headers):
     client = test_app.test_client()
     resp = client.post(
         '/auth/register',
-        data=json.dumps(payload),
+        data=json.dumps(user_data),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400

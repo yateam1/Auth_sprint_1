@@ -48,12 +48,21 @@ tokens = auth_namespace.model(
 
 
 class Register(Resource):
-    @auth_namespace.marshal_with(user)
+    @auth_namespace.marshal_with(tokens)
     @auth_namespace.expect(user_with_password, validate=True)
     @auth_namespace.response(201, 'Успех.')
     @auth_namespace.response(400, 'Пользователь уже зарегистрирован.')
     def post(self):
         """Регистрация нового пользователя."""
+
+        # Проверяем зоголовки
+        args = headers_parser.parse_args()
+        fingerprint = args.get('Fingerprint')
+        user_agent = args.get('User-Agent')
+        if not all((fingerprint, user_agent)):
+            auth_namespace.abort(400, 'Не переданы обязательные заголовки.')
+
+        # Проверяем тело запроса, формируем пользователя
         post_data = request.get_json()
 
         user = user_service.get_user_by_username(post_data.get('username'))
@@ -61,7 +70,19 @@ class Register(Resource):
             auth_namespace.abort(400, f'Пользователь {post_data["username"]} уже зарегистрирован.')
         user = user_service.create(**post_data)
 
-        return user, 201
+        # Заводим для нового пользователя сессию
+        access_token = user.encode_token()
+        refresh_token = str(uuid4())
+        session = {
+            'refresh_token': refresh_token,
+            'user': user,
+            'fingerprint': fingerprint,
+            'user_agent': user_agent,
+        }
+        session_service.create(**session)
+
+        response = {'access_token': access_token, 'refresh_token': refresh_token}
+        return response, 201
 
 
 class Auth(Resource):
