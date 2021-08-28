@@ -5,13 +5,14 @@ from flask_restx import Namespace, Resource, fields
 
 from .parsers import headers_parser
 from app.bcrypt import bcrypt
-from app.services import SessionService, UserService, JWTService
+from app.services import SessionService, UserService, JWTService, AuthService
 
 
 auth_namespace = Namespace('auth')
 
 user_service = UserService()
 session_service = SessionService()
+auth_service = AuthService()
 
 user = auth_namespace.model(
     'User',
@@ -51,14 +52,7 @@ class Register(Resource):
     @auth_namespace.response(400, 'Пользователь уже зарегистрирован.')
     def post(self):
         """Регистрация нового пользователя."""
-        post_data = request.get_json()
-
-        user = user_service.get_user_by_username(post_data.get('username'))
-        if user:
-            auth_namespace.abort(400, f'Пользователь {post_data["username"]} уже зарегистрирован.')
-        user = user_service.create(**post_data)
-
-        return user, 201
+        auth_service.register()
 
 
 class Auth(Resource):
@@ -70,34 +64,7 @@ class Auth(Resource):
     @auth_namespace.response(404, 'Пользователя не существует.')
     def post(self):
         """Аутентификация пользователя."""
-        args = headers_parser.parse_args()
-        fingerprint = args.get('Fingerprint')
-        user_agent = args.get('User-Agent')
-        if not all((fingerprint, user_agent)):
-            auth_namespace.abort(400, 'Не переданы обязательные заголовки.')
-
-        post_data = request.get_json()
-        username = post_data.get('username')
-        password = post_data.get('password')
-
-        user = user_service.get_user_by_username(username)
-        if not user:
-            auth_namespace.abort(404, 'Пользователя не существует.')
-        if not bcrypt.check_password_hash(user.password, password):
-            auth_namespace.abort(404, 'Неверный пароль.')
-
-        access_token = JWTService.encode_token(user=user)
-        refresh_token = str(uuid4())
-        session = {
-            'refresh_token': refresh_token,
-            'user': user,
-            'fingerprint': fingerprint,
-            'user_agent': user_agent,
-        }
-        session_service.create(**session)
-
-        response = {'access_token': access_token, 'refresh_token': refresh_token}
-        return response, 200
+        return auth_service.auth()
 
 
 class Refresh(Resource):
@@ -108,34 +75,7 @@ class Refresh(Resource):
     @auth_namespace.response(400, 'Refresh-токен истек, либо не существует')
     def post(self):
         """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
-        args = headers_parser.parse_args()
-        fingerprint = args.get('Fingerprint')
-        user_agent = args.get('User-Agent')
-        if not all((fingerprint, user_agent)):
-            auth_namespace.abort(400, 'Не переданы обязательные заголовки.')
-
-        post_data = request.get_json()
-        refresh_token = post_data.get('refresh_token')
-
-        session = session_service.get_by_refresh_token(refresh_token=refresh_token,
-                                                       fingerprint=fingerprint,
-                                                       user_agent=user_agent)
-        if not session:
-            auth_namespace.abort(400, 'Refresh-токен истек, либо не существует. Нужно залогиниться')
-        access_token = JWTService.encode_token(user=session.user)
-        session_service.delete(session)
-        new_refresh_token = str(uuid4())
-
-        session = {
-            'refresh_token': new_refresh_token,
-            'user': session.user,
-            'fingerprint': fingerprint,
-            'user_agent': user_agent,
-        }
-        session_service.create(**session)
-
-        response = {'access_token': access_token, 'refresh_token': new_refresh_token}
-        return response, 201
+        return auth_service.refresh()
 
 
 auth_namespace.add_resource(Register, '/register')
