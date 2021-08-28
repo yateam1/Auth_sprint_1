@@ -11,7 +11,7 @@ session_service = SessionService()
 history_service = HistoryService()
 
 
-def test_register_user(test_app, test_db):
+def test_register_user(test_app, test_db, auth_headers):
     client = test_app.test_client()
     user_data = {
         'username': 'we1tkind',
@@ -22,6 +22,7 @@ def test_register_user(test_app, test_db):
         '/auth/register',
         data=json.dumps(user_data),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     profile = profile_service.get_by_email(user_data['email'])
@@ -30,7 +31,7 @@ def test_register_user(test_app, test_db):
     assert user_data['username'] == data['username']
 
 
-def test_register_user_with_same_username(test_app, test_db):
+def test_register_user_with_same_username(test_app, test_db, auth_headers):
     client = test_app.test_client()
     user = UserFactory(password='123', username='user')
     user_data = {
@@ -42,6 +43,7 @@ def test_register_user_with_same_username(test_app, test_db):
         '/auth/register',
         data=json.dumps(user_data),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400

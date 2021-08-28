@@ -38,8 +38,12 @@ refresh_token = auth_namespace.model(
     'Refresh token', {'refresh_token': fields.String(required=True)}
 )
 
-tokens = auth_namespace.clone(
-    'Access and refresh tokens', refresh_token, {'access_token': fields.String(required=True)}
+tokens = auth_namespace.model(
+    'Access and refresh tokens',
+    {
+        'refresh_token': fields.String(required=True),
+        'access_token': fields.String(required=True)
+    }
 )
 
 
