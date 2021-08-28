@@ -1,7 +1,7 @@
 import pytest
 
 from app import create_app, db
-from app.factories import HeaderFactory, UserFactory
+from app.factories import HeaderFactory, UserFactory, RoleFactory
 from app.models import User
 
 
@@ -30,6 +30,15 @@ def auth_headers():
 def user_headers(auth_headers):
     user = UserFactory(password='password')
     auth_headers['Authorization'] = user.encode_token()
+    return auth_headers
+
+
+@pytest.fixture
+def user_admin_headers(auth_headers):
+    role = RoleFactory(name='admin')
+    user = UserFactory(password='password', roles=[role, ])
+    auth_headers['Authorization'] = user.encode_token()
+
     return auth_headers
 
 
