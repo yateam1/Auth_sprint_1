@@ -1,7 +1,11 @@
 from flask_restx import Api
 
-from .v1 import auth_namespace, permissions_namespace, ping_namespace, users_namespace, headers_parser
-
+from app.api.v1 import (
+    auth_namespace,
+    permissions_namespace,
+    ping_namespace,
+    users_namespace,
+)
 api = Api(version='1.0', title='Auth API')
 
 api.add_namespace(ping_namespace, path='/ping')

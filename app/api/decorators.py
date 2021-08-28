@@ -1,10 +1,9 @@
-from datetime import datetime
 from functools import wraps
 
 import jwt
+from flask import request
 from flask_restx import namespace
 
-from app.api.v1.parsers import headers_parser
 from app.services import UserService, RoleService, JWTService
 
 user_service = UserService()
@@ -19,7 +18,7 @@ def login_required(method):
     """
     @wraps(method)
     def wrapper(*args, **kwargs):
-        access_token = headers_parser.parse_args().get('Authorization')
+        access_token = request.headers.get('Authorization')
         try:
             JWTService.decode_token(access_token)
         except jwt.exceptions.DecodeError:
@@ -41,7 +40,7 @@ def does_user_have_role(role_name):
     def decorator(method):
         @wraps(method)
         def wrapper(*args, **kwargs):
-            access_token = headers_parser.parse_args().get('Authorization')
+            access_token = request.headers.get('Authorization')
             decode_token = JWTService.decode_token(access_token)
             if role_name not in decode_token['roles']:
                 return namespace.abort(404, f'Пользователю не назначена роль {role_name}')

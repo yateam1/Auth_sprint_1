@@ -1,12 +1,8 @@
-from datetime import datetime, timedelta
-
-import jwt
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.bcrypt import bcrypt
 from app.db import db
 from app.mixins import BaseModel
-from app.settings import config
 
 users_roles_association = db.Table(
     "users_roles",
@@ -32,14 +28,23 @@ class User(BaseModel, db.Model):
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.password = bcrypt.generate_password_hash(password).decode()
+        self.password = self.hash_password(password)
+
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """Хеширование пароля."""
+        return bcrypt.generate_password_hash(password).decode('utf-8')
+
+    def check_password(self, password: str) -> bool:
+        """Проверка пароля на равенство с хешом."""
+        return bcrypt.check_password_hash(self.password, password)
 
 
 class Profile(BaseModel, db.Model):
     __tablename__ = 'profiles'
 
     email = db.Column(db.String(128), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
     user = db.relationship('User', back_populates='profile')
 
 
