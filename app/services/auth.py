@@ -1,6 +1,5 @@
 from typing import Optional
 from datetime import datetime, timedelta
-from uuid import uuid4
 
 from flask_restx import namespace
 from flask import request
@@ -23,7 +22,17 @@ class JWTService:
         return jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
 
     @staticmethod
-    def encode_token(user: Optional[User] = None, **kwargs) -> str:
+    def is_token_valid(token: str) -> bool:
+        try:
+            JWTService.decode_token(token)
+        except jwt.exceptions.DecodeError:
+            return False
+        return True
+
+    @staticmethod
+    def encode_token(user: Optional[User] = None,
+                     expires: int = config('ACCESS_TOKEN_EXPIRATION', cast=int),
+                     **kwargs) -> str:
         data = {
             'user_id': str(user.id),
             'roles': [role.name for role in user.roles],
@@ -31,7 +40,7 @@ class JWTService:
         } if user else kwargs
 
         payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
+            'exp': datetime.utcnow() + timedelta(seconds=expires),
             'iat': datetime.utcnow(),
             **data,
         }
@@ -46,6 +55,17 @@ def auth_decorator(method_to_decorate):
         if not all((self.fingerprint, self.user_agent)):
             return namespace.abort(400, 'Не переданы обязательные заголовки.')
         return method_to_decorate(self) or self.generate_tokens(self.user), self.code
+    return wrapper
+
+
+def refresh_decorator(method_to_decorate):
+    def wrapper(self):
+        post_data = request.get_json()
+        refresh_token = post_data.get('refresh_token')
+        print(refresh_token)
+        if refresh_token and not JWTService.is_token_valid(refresh_token):
+            return namespace.abort(400, f'Refresh-токен истек. Нужно залогиниться')
+        return method_to_decorate(self)
     return wrapper
 
 
@@ -64,7 +84,7 @@ class AuthService:
 
     def generate_tokens(self, user: User):
         access_token = JWTService.encode_token(user=user)
-        refresh_token = str(uuid4())
+        refresh_token = JWTService.encode_token(user=user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
         session = {
             'refresh_token': refresh_token,
             'user': user,
@@ -93,6 +113,7 @@ class AuthService:
             return namespace.abort(404, f'Неверный пароль.')
 
     @auth_decorator
+    @refresh_decorator
     def refresh(self):
         post_data = request.get_json()
         refresh_token = post_data.get('refresh_token')
