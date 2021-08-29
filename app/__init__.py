@@ -5,6 +5,7 @@ from app.api import api
 from app.bcrypt import bcrypt
 from app.db import db
 from app.settings import config
+from app.social import social_blueprint
 
 migrate = Migrate()
 
@@ -24,6 +25,8 @@ def create_app(test_config=None):
     bcrypt.init_app(app)
 
     api.init_app(app)
+
+    app.register_blueprint(social_blueprint)
 
     @app.shell_context_processor
     def ctx():

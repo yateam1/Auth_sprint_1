@@ -1,4 +1,5 @@
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.ext.mutable import MutableDict
 
 from app.bcrypt import bcrypt
 from app.db import db
@@ -74,3 +75,12 @@ class History(BaseModel, db.Model):
     user_agent = db.Column(db.String(255), nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship('User', uselist=False, back_populates='history')
+
+
+class Social(BaseModel, db.Model):
+    __tablename__ = 'social'
+
+    provider = db.Column(db.String(50), nullable=False)
+    token = db.Column(MutableDict.as_mutable(db.JSON), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
+    user = db.relationship('User', back_populates='social')

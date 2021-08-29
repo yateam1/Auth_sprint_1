@@ -2,7 +2,6 @@ from flask_restx import Namespace, Resource, fields
 
 from app.services import SessionService, UserService, AuthService
 
-
 auth_namespace = Namespace('auth')
 
 user_service = UserService()
