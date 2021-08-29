@@ -1,12 +1,8 @@
-from datetime import datetime, timedelta
-
-import jwt
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.bcrypt import bcrypt
 from app.db import db
 from app.mixins import BaseModel
-from app.settings import config
 
 users_roles_association = db.Table(
     "users_roles",
@@ -32,33 +28,23 @@ class User(BaseModel, db.Model):
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
-        self.password = bcrypt.generate_password_hash(password).decode()
+        self.password = self.hash_password(password)
 
     @staticmethod
-    def decode_token(token: str) -> dict:
-        token_ = jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
-        token_['exp'] = datetime.fromtimestamp(token_['exp'])
-        token_['iat'] = datetime.fromtimestamp(token_['iat'])
-        return token_
+    def hash_password(password: str) -> str:
+        """Хеширование пароля."""
+        return bcrypt.generate_password_hash(password).decode('utf-8')
 
-    def encode_token(self) -> str:
-        payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
-            'iat': datetime.utcnow(),
-            'user_id': str(self.id),
-            'roles': [role.name for role in self.roles],
-            'is_super': self.is_super,
-        }
-        return jwt.encode(
-            payload, config('SECRET_KEY'), algorithm='HS256'
-        )
+    def check_password(self, password: str) -> bool:
+        """Проверка пароля на равенство с хешом."""
+        return bcrypt.check_password_hash(self.password, password)
 
 
 class Profile(BaseModel, db.Model):
     __tablename__ = 'profiles'
 
     email = db.Column(db.String(128), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'))
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
     user = db.relationship('User', back_populates='profile')
 
 
@@ -70,7 +56,6 @@ class Session(BaseModel, db.Model):
     refresh_token = db.Column(db.String(255), nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship('User', uselist=False, back_populates='sessions')
-    expired = db.Column(db.DateTime, nullable=False)
 
 
 class Role(BaseModel, db.Model):

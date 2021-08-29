@@ -8,6 +8,7 @@ import factory.random
 
 from app.db import db
 from app.models import History, Profile, Role, Session, User
+from app.services import JWTService
 from app.settings import config
 
 factory.random.reseed_random(0)
@@ -57,13 +58,8 @@ class SessionFactory(BaseFactory):
         sqlalchemy_session = db.session
         exclude = ('now',)
 
-    now = factory.LazyFunction(datetime.utcnow)
-
     fingerprint = factory.fuzzy.FuzzyText(length=48, prefix='fingerprint_')
     user_agent = factory.Faker('user_agent')
-    user = factory.SubFactory(UserFactory)
-    refresh_token = factory.fuzzy.FuzzyText(length=12, prefix='refresh_')
-    expired = factory.LazyAttribute(lambda o: o.now + timedelta(seconds=config('REFRESH_TOKEN_EXPIRATION', cast=int)))
 
 
 class AuthHeaders(NamedTuple):

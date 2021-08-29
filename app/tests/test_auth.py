@@ -3,15 +3,16 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from app import config
 from app.factories import SessionFactory, UserFactory
-from app.services import HistoryService, ProfileService, SessionService
+from app.services import HistoryService, ProfileService, SessionService, JWTService
 
 profile_service = ProfileService()
 session_service = SessionService()
 history_service = HistoryService()
 
 
-def test_register_user(test_app, test_db):
+def test_register_user(test_app, test_db, auth_headers):
     client = test_app.test_client()
     user_data = {
         'username': 'we1tkind',
@@ -22,15 +23,17 @@ def test_register_user(test_app, test_db):
         '/auth/register',
         data=json.dumps(user_data),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     profile = profile_service.get_by_email(user_data['email'])
     assert profile is not None
     assert resp.status_code == 201
-    assert user_data['username'] == data['username']
+    assert 'access_token' in data.keys()
+    assert 'refresh_token' in data.keys()
 
 
-def test_register_user_with_same_username(test_app, test_db):
+def test_register_user_with_same_username(test_app, test_db, auth_headers):
     client = test_app.test_client()
     user = UserFactory(password='123', username='user')
     user_data = {
@@ -42,6 +45,7 @@ def test_register_user_with_same_username(test_app, test_db):
         '/auth/register',
         data=json.dumps(user_data),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400
@@ -56,12 +60,13 @@ def test_register_user_with_same_username(test_app, test_db):
      {'username': 'qwerty'},
      ],
 )
-def test_register_user_without_required_data(test_app, test_db, payload):
+def test_register_user_without_required_data(test_app, test_db, payload, auth_headers):
     client = test_app.test_client()
     resp = client.post(
         '/auth/register',
         data=json.dumps(payload),
         content_type='application/json',
+        headers=auth_headers,
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 400
@@ -144,7 +149,7 @@ def test_auth_incorrect_user(test_app, test_db, auth_headers):
     )
     data = json.loads(resp.data.decode())
     assert resp.status_code == 404
-    assert 'Пользователя не существует.' in data['message']
+    assert 'Неверный пароль.' in data['message']
 
 
 def test_auth_user_with_incorrect_password(test_app, test_db, auth_headers):
@@ -172,6 +177,7 @@ def test_update_refresh_token(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
+        refresh_token=JWTService.encode_token(user=user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
     )
 
     user_data = {
@@ -200,7 +206,6 @@ def test_update_expired_refresh_token(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() - timedelta(seconds=1),
     )
 
     user_data = {

@@ -23,7 +23,7 @@ cat config/.env.template > config/.env
 2. В файле `config/.env` заполнить секреты данными.
 3. Провести миграции.
 ```shell
-docker-compose run --rm flask db upgrade
+docker-compose run --rm flask-api db upgrade
 ```
 4. Запустить контейнеры.
 ```shell
