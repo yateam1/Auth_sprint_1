@@ -3,8 +3,9 @@ from datetime import datetime, timedelta
 
 import pytest
 
+from app import config
 from app.factories import SessionFactory, UserFactory
-from app.services import HistoryService, ProfileService, SessionService
+from app.services import HistoryService, ProfileService, SessionService, JWTService
 
 profile_service = ProfileService()
 session_service = SessionService()
@@ -176,6 +177,7 @@ def test_update_refresh_token(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
+        refresh_token=JWTService.encode_token(user=user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
     )
 
     user_data = {
@@ -204,7 +206,6 @@ def test_update_expired_refresh_token(test_app, test_db, auth_headers):
         user=user,
         user_agent=auth_headers['User-Agent'],
         fingerprint=auth_headers['Fingerprint'],
-        expired=datetime.utcnow() - timedelta(seconds=1),
     )
 
     user_data = {
