@@ -54,7 +54,7 @@ def auth_decorator(method_to_decorate):
         self.get_headers()
         if not all((self.fingerprint, self.user_agent)):
             return namespace.abort(400, 'Не переданы обязательные заголовки.')
-        return method_to_decorate(self) or self.generate_tokens(self.user), self.code
+        return method_to_decorate(self) or self.generate_tokens(), self.code
     return wrapper
 
 
@@ -82,12 +82,12 @@ class AuthService:
         self.user_agent = request.headers.get('User-Agent')
         self.auth_header = request.headers.get('Authorization')
 
-    def generate_tokens(self, user: User):
-        access_token = JWTService.encode_token(user=user)
-        refresh_token = JWTService.encode_token(user=user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
+    def generate_tokens(self):
+        access_token = JWTService.encode_token(user=self.user)
+        refresh_token = JWTService.encode_token(user=self.user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
         session = {
             'refresh_token': refresh_token,
-            'user': user,
+            'user': self.user,
             'fingerprint': self.fingerprint,
             'user_agent': self.user_agent,
         }
