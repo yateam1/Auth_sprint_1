@@ -83,7 +83,7 @@ class AuthService:
         self.auth_header = request.headers.get('Authorization')
 
     def generate_tokens(self):
-        access_token = JWTService.e
+        access_token = JWTService.encode_token(user=self.user)
         refresh_token = JWTService.encode_token(user=self.user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
         session = {
             'refresh_token': refresh_token,
