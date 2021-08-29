@@ -38,7 +38,7 @@ class SessionService(AbstractService):
     def get_by_refresh_token(
             self,
             refresh_token: str,
-            fingerprint :str,
+            fingerprint: str,
             user_agent: str,
     ):
         """Возвращает сессию по рефреш токену."""

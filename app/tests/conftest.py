@@ -38,7 +38,7 @@ def user_headers(auth_headers):
 def user_admin_headers(auth_headers):
     role = RoleFactory(name='admin')
     user = UserFactory(password='password', roles=[role, ])
-    auth_headers['Authorization'] = user.encode_token()
+    auth_headers['Authorization'] = JWTService.encode_token(user=user)
 
     return auth_headers
 
