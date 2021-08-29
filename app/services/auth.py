@@ -1,3 +1,4 @@
+from random import randint
 from typing import Optional
 from datetime import datetime, timedelta
 
@@ -44,6 +45,7 @@ class JWTService:
         payload = {
             'exp': datetime.utcnow() + timedelta(seconds=expires),
             'iat': datetime.utcnow(),
+            'jti': randint(1, 99999999999),
             **data,
         }
         return jwt.encode(
