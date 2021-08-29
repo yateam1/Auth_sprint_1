@@ -22,9 +22,9 @@ def login_required(method):
         try:
             JWTService.decode_token(access_token)
         except jwt.exceptions.DecodeError:
-            return namespace.abort(404, 'Неверный формат токена.')
+            return namespace.abort(401, 'Неверный формат токена.')
         except jwt.exceptions.ExpiredSignatureErro:
-            return namespace.abort(404, 'Срок действия токен истек.')
+            return namespace.abort(401, 'Срок действия токен истек.')
 
         return method(args, **kwargs)
     return wrapper
@@ -43,7 +43,7 @@ def does_user_have_role(role_name):
             access_token = request.headers.get('Authorization')
             decode_token = JWTService.decode_token(access_token)
             if role_name not in decode_token['roles']:
-                return namespace.abort(404, f'Пользователю не назначена роль {role_name}')
+                return namespace.abort(403, f'Пользователю не назначена роль {role_name}')
 
             return method(args, **kwargs)
         return wrapper
