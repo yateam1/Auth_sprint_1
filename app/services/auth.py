@@ -83,7 +83,7 @@ class AuthService:
         self.auth_header = request.headers.get('Authorization')
 
     def generate_tokens(self):
-        access_token = JWTService.encode_token(user=self.user)
+        access_token = JWTService.e
         refresh_token = JWTService.encode_token(user=self.user, expires=config('REFRESH_TOKEN_EXPIRATION', cast=int))
         session = {
             'refresh_token': refresh_token,
@@ -111,6 +111,7 @@ class AuthService:
         self.user = user_service.get_user_by_username(username)
         if not (self.user and self.user.check_password(password)):
             return namespace.abort(404, f'Неверный пароль.')
+        self.code = 200
 
     @auth_decorator
     @refresh_decorator
@@ -123,3 +124,4 @@ class AuthService:
         if not session:
             return namespace.abort(400, f'Refresh-токен истек, либо не существует. Нужно залогиниться')
         self.user = session.user
+        self.code = 201
