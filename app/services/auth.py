@@ -27,6 +27,8 @@ class JWTService:
             JWTService.decode_token(token)
         except jwt.exceptions.DecodeError:
             return False
+        except jwt.exceptions.ExpiredSignatureError:
+            return False
         return True
 
     @staticmethod
