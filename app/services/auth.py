@@ -45,7 +45,7 @@ def auth_decorator(method_to_decorate):
         self.get_headers()
         if not all((self.fingerprint, self.user_agent)):
             return namespace.abort(400, 'Не переданы обязательные заголовки.')
-        return method_to_decorate(self) or self.generate_tokens(self.user), self.code
+        return method_to_decorate(self) or self.generate_tokens(), self.code
     return wrapper
 
 
@@ -62,12 +62,12 @@ class AuthService:
         self.user_agent = request.headers.get('User-Agent')
         self.auth_header = request.headers.get('Authorization')
 
-    def generate_tokens(self, user: User):
-        access_token = JWTService.encode_token(user=user)
+    def generate_tokens(self):
+        access_token = JWTService.encode_token(user=self.user)
         refresh_token = str(uuid4())
         session = {
             'refresh_token': refresh_token,
-            'user': user,
+            'user': self.user,
             'fingerprint': self.fingerprint,
             'user_agent': self.user_agent,
         }
@@ -91,6 +91,7 @@ class AuthService:
         self.user = user_service.get_user_by_username(username)
         if not (self.user and self.user.check_password(password)):
             return namespace.abort(404, f'Неверный пароль.')
+        self.code = 200
 
     @auth_decorator
     def refresh(self):
@@ -102,3 +103,4 @@ class AuthService:
         if not session:
             return namespace.abort(400, f'Refresh-токен истек, либо не существует. Нужно залогиниться')
         self.user = session.user
+        self.code = 201
