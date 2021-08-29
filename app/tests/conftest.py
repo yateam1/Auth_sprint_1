@@ -1,8 +1,9 @@
 import pytest
 
 from app import create_app, db
+from app.services import JWTService
+
 from app.factories import HeaderFactory, UserFactory, RoleFactory
-from app.models import User
 
 
 @pytest.fixture(scope="module")
@@ -29,7 +30,7 @@ def auth_headers():
 @pytest.fixture
 def user_headers(auth_headers):
     user = UserFactory(password='password')
-    auth_headers['Authorization'] = user.encode_token()
+    auth_headers['Authorization'] = JWTService.encode_token(user=user)
     return auth_headers
 
 
@@ -43,4 +44,4 @@ def user_admin_headers(auth_headers):
 
 
 def get_user_id_from_token(token: str) -> dict:
-    return User.decode_token(token)['user_id']
+    return JWTService.decode_token(token)['user_id']

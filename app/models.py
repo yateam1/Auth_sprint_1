@@ -1,12 +1,8 @@
-from datetime import datetime, timedelta
-
-import jwt
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.bcrypt import bcrypt
 from app.db import db
 from app.mixins import BaseModel
-from app.settings import config
 
 users_roles_association = db.Table(
     "users_roles",
@@ -42,25 +38,6 @@ class User(BaseModel, db.Model):
     def check_password(self, password: str) -> bool:
         """Проверка пароля на равенство с хешом."""
         return bcrypt.check_password_hash(self.password, password)
-
-    @staticmethod
-    def decode_token(token: str) -> dict:
-        token_ = jwt.decode(token, config("SECRET_KEY"), algorithms="HS256")
-        token_['exp'] = datetime.fromtimestamp(token_['exp'])
-        token_['iat'] = datetime.fromtimestamp(token_['iat'])
-        return token_
-
-    def encode_token(self) -> str:
-        payload = {
-            'exp': datetime.utcnow() + timedelta(seconds=config('ACCESS_TOKEN_EXPIRATION', cast=int)),
-            'iat': datetime.utcnow(),
-            'user_id': str(self.id),
-            'roles': [role.name for role in self.roles],
-            'is_super': self.is_super,
-        }
-        return jwt.encode(
-            payload, config('SECRET_KEY'), algorithm='HS256'
-        )
 
 
 class Profile(BaseModel, db.Model):
