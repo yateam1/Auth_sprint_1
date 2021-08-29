@@ -48,7 +48,7 @@ class Register(Resource):
     @auth_namespace.response(400, 'Пользователь уже зарегистрирован.')
     def post(self):
         """Регистрация нового пользователя."""
-        auth_service.register()
+        return auth_service.register()
 
 
 class Auth(Resource):
