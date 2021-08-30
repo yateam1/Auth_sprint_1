@@ -12,6 +12,12 @@ users_roles_association = db.Table(
 )
 
 
+users_socials_association = db.Table(
+    "users_socials",
+    db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("users.id")),
+    db.Column("social_id", UUID(as_uuid=True), db.ForeignKey("socials.id")),
+)
+
 class User(BaseModel, db.Model):
     __tablename__ = 'users'
 
@@ -26,6 +32,10 @@ class User(BaseModel, db.Model):
                             back_populates="users")
     sessions = db.relationship("Session", back_populates="user")
     history = db.relationship("History", back_populates="user")
+    socials = db.relationship("Social",
+                              secondary=users_socials_association,
+                              back_populates="users")
+
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -78,9 +88,11 @@ class History(BaseModel, db.Model):
 
 
 class Social(BaseModel, db.Model):
-    __tablename__ = 'social'
+    __tablename__ = 'socials'
 
     provider = db.Column(db.String(50), nullable=False)
     token = db.Column(MutableDict.as_mutable(db.JSON), nullable=False)
-    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
-    user = db.relationship('User', back_populates='social')
+    # user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users.id'), unique=True)
+    users = db.relationship('User',
+                            secondary=users_socials_association,
+                            back_populates='socials')
