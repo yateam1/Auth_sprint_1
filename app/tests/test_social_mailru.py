@@ -1,24 +1,24 @@
-import json
 import pytest
+import requests
+import random
+import string
 
 from app import config
 
 
 @pytest.mark.social_tests
 def test_success_get_authorization_code(test_app):
-    client = test_app.test_client()
+    # client = test_app.test_client()
     params = {
         'client_id': config('MAILRU_CLIENT_ID'),
         'response_type': 'code',
-        'scope': 'email',
-        'redirect_uri': '/mailru/callback/',
+        'redirect_uri': 'http://localhost:8000/',
+        'state': ' ',
     }
-
-    resp = client.get(
+    response = requests.get(
         "https://oauth.mail.ru/login",
-        params
+        params=params,
     )
-    print(resp)
-    data = json.loads(resp.data.decode())
+    print(response.content)
 
-    assert resp.status_code == 200
+    assert response.status_code == 201
