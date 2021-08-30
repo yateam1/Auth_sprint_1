@@ -1,6 +1,7 @@
 from flask import Blueprint
 
 from app.social.github import Github
+from app.social.mailru import MailRu
 
 
 social_blueprint = Blueprint('social', __name__, url_prefix='/social')
@@ -8,6 +9,7 @@ social_blueprint = Blueprint('social', __name__, url_prefix='/social')
 
 providers = {
     'github': Github,
+    'mailru': MailRu,
 }
 
 
