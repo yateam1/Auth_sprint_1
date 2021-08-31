@@ -30,11 +30,14 @@ class Github:
     def callback(self):
         print('-----', session, session['oauth_state'])
         github = OAuth2Session(client_id, state=session.get('oauth_state'))
-        token = github.fetch_token(
-            token_url,
-            client_secret=client_secret,
-            authorization_response=request.url,
-        )
+        try:
+            token = github.fetch_token(
+                token_url,
+                client_secret=client_secret,
+                authorization_response=request.url,
+            )
+        except Exception as e:
+            return str(e)
         # TODO добавить действия
         # По идеи надо проверить есть ли у нас пользователь с такой почтой,
         # и если есть то залогинить его. Если нет, то создать учётную запись
