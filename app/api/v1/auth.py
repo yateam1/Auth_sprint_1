@@ -74,17 +74,8 @@ class Refresh(Resource):
         """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
         return auth_service.refresh()
 
-class SocialAuthGithub(Resource):
-    def get(self):
-        return social_auth.authorization()
-
-class SocialAuthGithubCallback(Resource):
-    def get(self):
-        return social_auth.callback()
 
 
 auth_namespace.add_resource(Register, '/register')
 auth_namespace.add_resource(Auth, '/login')
 auth_namespace.add_resource(Refresh, '/refresh')
-auth_namespace.add_resource(SocialAuthGithub, '/github')
-auth_namespace.add_resource(SocialAuthGithubCallback, '/github/callback')
