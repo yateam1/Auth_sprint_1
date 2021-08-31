@@ -2,9 +2,12 @@ from requests_oauthlib import OAuth2Session
 from flask import request, redirect, session
 from flask.json import jsonify
 import requests
+import json
+from urllib.parse import parse_qs
 
 from app.settings import config
-from app.services import UserService
+from app.services.users import UserService
+from app.services.social import SocialService
 
 client_id = config('GITHUB_CLIENT_ID')
 client_secret = config('GITHUB_CLIENT_SECRET')
@@ -16,26 +19,27 @@ user_endpoint = "https://api.github.com/user"
 class Github:
 
     def authorization(self):
-        print('-----', session, session.get('oauth_state'))
         github = OAuth2Session(
             client_id,
             scope=['user:email'],
         )
         authorization_url, state = github.authorization_url(authorization_base_url)
         session['oauth_state'] = state
-        self.token = state
-        print('+++', state, session)
         return redirect(authorization_url)
 
-    def callback(self):
-        print('-----', session, session.get('oauth_state'))
-        github = OAuth2Session(client_id, state=session.get('oauth_state'))
+    def callback(self, state=None):
+        github = OAuth2Session(client_id, state=request.args.get('state'))
         try:
-            token = github.fetch_token(
+            res = requests.post(
                 token_url,
-                client_secret=client_secret,
-                authorization_response=request.url,
+                data=dict(
+                    client_id=client_id,
+                    client_secret=client_secret,
+                    code=request.args.get('code'),
+                ),
             )
+            res = parse_qs(res.content.decode("utf-8"))
+            token = res["access_token"][0]
         except Exception as e:
             return str(e)
         # TODO добавить действия
@@ -43,11 +47,10 @@ class Github:
         # и если есть то залогинить его. Если нет, то создать учётную запись
         # и также его залогинить. Ну и записать в таблицу social данные.
 
-        # получаю мэйл, по нему нахожу пользователя
         user_data = requests.get(user_endpoint, headers=dict(Authorization=f"token {token}")).json()
         email = user_data.get('email')
-        print('===', user_data)
         if email:
             user = UserService.get_user_by_username(user_data.get('login'))
-        import json
+            if user:
+                SocialService.create(provider='github', token=token, user=user)
         return json.dumps(user_data)
