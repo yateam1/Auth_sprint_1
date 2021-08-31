@@ -1,12 +1,15 @@
 from flask_restx import Namespace, Resource, fields
 
 from app.services import SessionService, UserService, AuthService
+from app.social import Github
 
 auth_namespace = Namespace('auth')
+social_namespace = Namespace('social')
 
 user_service = UserService()
 session_service = SessionService()
 auth_service = AuthService()
+social_auth = Github()
 
 
 user = auth_namespace.model(
@@ -71,7 +74,17 @@ class Refresh(Resource):
         """Генерация новых access и refresh токенов в обмен на корректный refresh-токен"""
         return auth_service.refresh()
 
+class SocialAuthGithub(Resource):
+    def get(self):
+        return social_auth.authorization()
+
+class SocialAuthGithubCallback(Resource):
+    def get(self):
+        return social_auth.callback()
+
 
 auth_namespace.add_resource(Register, '/register')
 auth_namespace.add_resource(Auth, '/login')
 auth_namespace.add_resource(Refresh, '/refresh')
+auth_namespace.add_resource(SocialAuthGithub, '/github')
+auth_namespace.add_resource(SocialAuthGithubCallback, '/github/callback')
