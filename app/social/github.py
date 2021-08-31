@@ -28,7 +28,7 @@ class Github:
         return redirect(authorization_url)
 
     def callback(self):
-        print('-----', session, session['oauth_state'])
+        print('-----', session, session.get('oauth_state'))
         github = OAuth2Session(client_id, state=session.get('oauth_state'))
         try:
             token = github.fetch_token(
