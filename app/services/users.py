@@ -1,4 +1,7 @@
 from typing import Iterable
+import secrets
+import string
+
 from app.bcrypt import bcrypt
 from app.models import Profile, User, Role
 from app.services.base import AbstractService
@@ -14,6 +17,12 @@ class ProfileService(AbstractService):
 
 class UserService(AbstractService):
     model = User
+
+    @staticmethod
+    def generate_password():
+        alphabet = string.ascii_letters + string.digits
+        password = ''.join(secrets.choice(alphabet) for i in range(20))
+        return password
 
     def get_user_by_username(self, username: str):
         """Возвращает пользователя с юзернеймом username."""

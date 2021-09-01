@@ -4,9 +4,11 @@ from flask.json import jsonify
 import requests
 import json
 from urllib.parse import parse_qs
+from random import randint
 
 from app.settings import config
 from app.services.users import UserService
+from app.services.users import ProfileService
 from app.services.social import SocialService
 
 client_id = config('GITHUB_CLIENT_ID')
@@ -15,6 +17,9 @@ authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 user_endpoint = "https://api.github.com/user"
 
+profile_service = ProfileService()
+user_service = UserService()
+social_service = SocialService()
 
 class Github:
 
@@ -28,7 +33,6 @@ class Github:
         return redirect(authorization_url)
 
     def callback(self, state=None):
-        github = OAuth2Session(client_id, state=request.args.get('state'))
         try:
             res = requests.post(
                 token_url,
@@ -49,8 +53,21 @@ class Github:
 
         user_data = requests.get(user_endpoint, headers=dict(Authorization=f"token {token}")).json()
         email = user_data.get('email')
+        login = user_data.get('login')
+        user = None
         if email:
-            user = UserService.get_user_by_username(user_data.get('login'))
-            if user:
-                SocialService.create(provider='github', token=token, user=user)
+            profile = profile_service.get_by_email(email=email)
+            if profile:
+                user = profile.user
+        if not user:
+            if login:
+                user = user_service.get_user_by_username(username=login)
+        if not user:
+            rand_num = ''.join(["{}".format(randint(0, 9)) for num in range(0, 10)])
+            user = user_service.create(
+                username=login or f'temp_login_{rand_num}',
+                email=email or f'temp_login_{rand_num}',
+                password=UserService.generate_password(),
+            )
+        social_service.create(provider='github', token={'token': token}, user=user)
         return json.dumps(user_data)

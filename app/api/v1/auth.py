@@ -4,7 +4,6 @@ from app.services import SessionService, UserService, AuthService
 from app.social import Github
 
 auth_namespace = Namespace('auth')
-social_namespace = Namespace('social')
 
 user_service = UserService()
 session_service = SessionService()
