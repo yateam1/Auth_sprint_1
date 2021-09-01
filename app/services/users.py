@@ -2,8 +2,7 @@ from typing import Iterable
 import secrets
 import string
 
-from app.bcrypt import bcrypt
-from app.models import Profile, User, Role
+from app.models import Profile, User
 from app.services.base import AbstractService
 
 

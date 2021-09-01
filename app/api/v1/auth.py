@@ -1,14 +1,9 @@
 from flask_restx import Namespace, Resource, fields
 
-from app.services import SessionService, UserService, AuthService
-from app.social import Github
+from app.services import auth_service
+
 
 auth_namespace = Namespace('auth')
-
-user_service = UserService()
-session_service = SessionService()
-auth_service = AuthService()
-social_auth = Github()
 
 
 user = auth_namespace.model(

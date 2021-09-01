@@ -8,8 +8,7 @@ import factory.random
 
 from app.db import db
 from app.models import History, Profile, Role, Session, User
-from app.services import JWTService
-from app.settings import config
+
 
 factory.random.reseed_random(0)
 

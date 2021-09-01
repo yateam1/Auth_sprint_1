@@ -2,11 +2,9 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from app.api.decorators import login_required, does_user_have_role
-from app.services import RoleService, UserService
+from app.services import role_service, user_service
 from app.api.v1.users import user
 
-role_service = RoleService()
-user_service = UserService()
 
 permissions_namespace = Namespace('permissions')
 

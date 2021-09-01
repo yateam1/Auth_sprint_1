@@ -2,9 +2,8 @@ from flask import request
 from flask_restx import Namespace, Resource, fields
 
 from app.api.decorators import login_required
-from app.services import UserService
+from app.services import user_service
 
-user_service = UserService()
 users_namespace = Namespace('users')
 
 
