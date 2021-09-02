@@ -72,8 +72,8 @@ class Github:
                 email=email,
                 password=passw,
             )
+            user_data['auth_password'] = passw
+            user_data['auth_login'] = login
+            user_data['auth_email'] = email
         social_service.create(provider='github', token={'token': token}, user=user)
-        user_data['auth_password'] = passw
-        user_data['auth_login'] = login
-        user_data['auth_email'] = email
         return json.dumps(user_data)
