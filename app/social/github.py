@@ -64,10 +64,16 @@ class Github:
                 user = user_service.get_user_by_username(username=login)
         if not user:
             rand_num = ''.join(["{}".format(randint(0, 9)) for num in range(0, 10)])
+            passw = UserService.generate_password()
+            login = login or f'temp_login_{rand_num}'
+            email = email or f'temp_login_{rand_num}'
             user = user_service.create(
-                username=login or f'temp_login_{rand_num}',
-                email=email or f'temp_login_{rand_num}',
-                password=UserService.generate_password(),
+                username=login,
+                email=email,
+                password=passw,
             )
         social_service.create(provider='github', token={'token': token}, user=user)
+        user_data['auth_password'] = passw
+        user_data['auth_login'] = login
+        user_data['auth_email'] = email
         return json.dumps(user_data)
