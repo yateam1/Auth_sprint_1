@@ -1,15 +1,10 @@
 from requests_oauthlib import OAuth2Session
 from flask import request, redirect, session
-from flask.json import jsonify
 import requests
 import json
-from urllib.parse import parse_qs
-from random import randint
 
 from app.settings import config
-from app.services.users import UserService
-from app.services.users import ProfileService
-from app.services.social import SocialService
+from app.services import user_service, profile_service
 
 client_id = config('GITHUB_CLIENT_ID')
 client_secret = config('GITHUB_CLIENT_SECRET')
@@ -17,9 +12,6 @@ authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 user_endpoint = "https://api.github.com/user"
 
-profile_service = ProfileService()
-user_service = UserService()
-social_service = SocialService()
 
 class Github:
 
@@ -42,7 +34,6 @@ class Github:
                     code=request.args.get('code'),
                 ),
             )
-            res = parse_qs(res.content.decode("utf-8"))
             token = res["access_token"][0]
         except Exception as e:
             return str(e)
@@ -54,20 +45,4 @@ class Github:
         user_data = requests.get(user_endpoint, headers=dict(Authorization=f"token {token}")).json()
         email = user_data.get('email')
         login = user_data.get('login')
-        user = None
-        if email:
-            profile = profile_service.get_by_email(email=email)
-            if profile:
-                user = profile.user
-        if not user:
-            if login:
-                user = user_service.get_user_by_username(username=login)
-        if not user:
-            rand_num = ''.join(["{}".format(randint(0, 9)) for num in range(0, 10)])
-            user = user_service.create(
-                username=login or f'temp_login_{rand_num}',
-                email=email or f'temp_login_{rand_num}',
-                password=UserService.generate_password(),
-            )
-        social_service.create(provider='github', token={'token': token}, user=user)
-        return json.dumps(user_data)
+

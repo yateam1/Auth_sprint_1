@@ -1,6 +1,5 @@
 from requests_oauthlib import OAuth2Session
 from flask import request, redirect, session
-from flask.json import jsonify
 
 from app.settings import config
 

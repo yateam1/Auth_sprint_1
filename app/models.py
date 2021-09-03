@@ -12,17 +12,11 @@ users_roles_association = db.Table(
 )
 
 
-users_social_association = db.Table(
-    "users_socials",
-    db.Column("user_id", UUID(as_uuid=True), db.ForeignKey("users.id")),
-    db.Column("social_id", UUID(as_uuid=True), db.ForeignKey("social.id")),
-)
-
 class User(BaseModel, db.Model):
     __tablename__ = 'users'
 
     username = db.Column(db.String(128), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
     active = db.Column(db.Boolean(), default=True, nullable=False)
     is_super = db.Column(db.Boolean(), default=False, nullable=False)
 
@@ -32,10 +26,8 @@ class User(BaseModel, db.Model):
                             back_populates="users")
     sessions = db.relationship("Session", back_populates="user")
     history = db.relationship("History", back_populates="user")
-    social = db.relationship("Social",
-                              secondary=users_social_association,
-                              back_populates="users")
-
+    github_id = db.Column(db.String(128), nullable=True, unique=True)
+    mailru_id = db.Column(db.String(128), nullable=True, unique=True)
 
     def __init__(self, password: str, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -85,13 +77,3 @@ class History(BaseModel, db.Model):
     user_agent = db.Column(db.String(255), nullable=False)
     user_id = db.Column(UUID(as_uuid=True), db.ForeignKey("users.id"))
     user = db.relationship('User', uselist=False, back_populates='history')
-
-
-class Social(BaseModel, db.Model):
-    __tablename__ = 'social'
-
-    provider = db.Column(db.String(50), nullable=False)
-    token = db.Column(MutableDict.as_mutable(db.JSON), nullable=False)
-    users = db.relationship('User',
-                            secondary=users_social_association,
-                            back_populates='social')
