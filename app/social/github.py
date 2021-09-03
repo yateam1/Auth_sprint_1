@@ -1,7 +1,9 @@
+from urllib.parse import parse_qs
+import json
+
 from requests_oauthlib import OAuth2Session
 from flask import request, redirect, session
 import requests
-import json
 
 from app.settings import config
 from app.services import user_service, profile_service
@@ -34,6 +36,7 @@ class Github:
                     code=request.args.get('code'),
                 ),
             )
+            res = parse_qs(res.content.decode("utf-8"))
             token = res["access_token"][0]
         except Exception as e:
             return str(e)
@@ -45,4 +48,3 @@ class Github:
         user_data = requests.get(user_endpoint, headers=dict(Authorization=f"token {token}")).json()
         email = user_data.get('email')
         login = user_data.get('login')
-
