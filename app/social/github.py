@@ -7,6 +7,9 @@ import requests
 
 from app.settings import config
 from app.services import user_service, profile_service
+from app.services.auth import AuthService
+from app.services.users import UserService
+from app.services.users import ProfileService
 
 client_id = config('GITHUB_CLIENT_ID')
 client_secret = config('GITHUB_CLIENT_SECRET')
@@ -14,6 +17,9 @@ authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 user_endpoint = "https://api.github.com/user"
 
+profile_service = ProfileService()
+user_service = UserService()
+auth_service = AuthService()
 
 class Github:
 
@@ -48,3 +54,19 @@ class Github:
         user_data = requests.get(user_endpoint, headers=dict(Authorization=f"token {token}")).json()
         email = user_data.get('email')
         login = user_data.get('login')
+        github_id = user_data.get('id')
+
+        profile = profile_service.get_by_email(email=email)
+        profile = profile.user if profile else user_service.get_user_by_username(username=login)
+        if profile:
+            user_service.update(profile, github_id=github_id)
+        else:
+            profile = user_service.create(
+                username=login,
+                email=email,
+                github_id=github_id,
+                password=UserService.generate_password(),
+            )
+        auth_service.auth(True, profile)
+
+        return json.dumps(user_data)

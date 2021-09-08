@@ -52,11 +52,12 @@ class JWTService:
 
 
 def auth_decorator(method_to_decorate):
-    def wrapper(self):
-        self.get_headers()
+    def wrapper(self, social=None, user=None):
+        if not social:
+            self.get_headers()
         if not all((self.fingerprint, self.user_agent)):
             return namespace.abort(400, 'Не переданы обязательные заголовки.')
-        return method_to_decorate(self) or self.generate_tokens(), self.code
+        return method_to_decorate(self, social, user) or self.generate_tokens(), self.code
     return wrapper
 
 
@@ -64,7 +65,6 @@ def refresh_decorator(method_to_decorate):
     def wrapper(self):
         post_data = request.get_json()
         refresh_token = post_data.get('refresh_token')
-        print(refresh_token)
         if refresh_token and not JWTService.is_token_valid(refresh_token):
             return namespace.abort(400, f'Refresh-токен истек. Нужно залогиниться')
         return method_to_decorate(self)
@@ -78,6 +78,7 @@ class AuthService:
         self.user = None
         self.user_agent = None
         self.code = 200
+        self.social = None
 
     def get_headers(self):
         self.fingerprint = request.headers.get('Fingerprint')
@@ -106,14 +107,21 @@ class AuthService:
         self.code = 201
 
     @auth_decorator
-    def auth(self):
-        post_data = request.get_json()
-        username = post_data.get('username')
-        password = post_data.get('password')
-        self.user = user_service.get_user_by_username(username)
-        if not (self.user and self.user.check_password(password)):
-            return namespace.abort(404, f'Неверный пароль.')
-        self.code = 200
+    def auth(self, social=False, user=None):
+        self.social = social
+        if not self.social:
+            post_data = request.get_json()
+            if post_data:
+                username = post_data.get('username')
+                password = post_data.get('password')
+                self.user = user_service.get_user_by_username(username)
+                if not (self.user and self.user.check_password(password)):
+                    return namespace.abort(404, f'Неверный пароль.')
+                self.code = 200
+        else:
+            self.fingerprint = 'fake_fingerprint'
+            self.user_agent = 'fake_user_agent'
+            self.user = user
 
     @auth_decorator
     @refresh_decorator
